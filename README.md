@@ -25,7 +25,7 @@ npm start                 # the API
 # open http://localhost:3000
 ```
 
-Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge tesseract-ocr wkhtmltopdf potrace p7zip-full libvips-tools` (plus `cargo install vtracer` for colour raster→svg).
+Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge tesseract-ocr wkhtmltopdf potrace p7zip-full libvips-tools python3 python3-pip`, then `pip3 install pdf2docx pdfplumber openpyxl` (and `cargo install vtracer` for colour raster→svg).
 
 ## What it converts
 
@@ -47,6 +47,7 @@ Eleven engines across every CloudConvert category. With one-hop **chaining** (be
 | OCR | Tesseract | scanned image → txt (png, jpg, tiff, bmp) |
 | Web pages | wkhtmltopdf | a live URL or local html → pdf, png, jpg |
 | Vectorize | vtracer / potrace | png, jpg, bmp, gif → svg (raster → vector) |
+| PDF → Office | pdf2docx / pdfplumber | pdf → docx (text, tables, images); pdf → xlsx (tables) |
 
 The live list is always at `GET /api/formats` and drives the UI dropdown — only engines whose binary is installed appear.
 
@@ -115,8 +116,17 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 - ~~**Queue:** Redis + BullMQ, multi-process, survives restarts.~~ ✅ done (Phase 2)
 - ~~**Engines:** Calibre, Inkscape, Ghostscript, Poppler, Assimp, 7-Zip, FontForge + one-hop chaining.~~ ✅ done (Phase 3)
 - ~~**OCR** (image → text), **URL/HTML → PDF/PNG** (wkhtmltopdf), **raster → SVG** (vtracer/potrace).~~ ✅ done (Phase 4)
-- **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), PDF → editable docx, subtitles.
+- ~~**PDF → editable Office:** pdf → docx (pdf2docx) and pdf → xlsx (pdfplumber).~~ ✅ done (Phase 5)
+- **Higher-fidelity PDF → Office:** optional ML engine (IBM Docling / Marker) — far better on complex layouts, but downloads models and wants more compute. See note below.
+- **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), subtitles, pdf → pptx.
 - **Operations:** OCR scanned pdf → searchable pdf, compress/optimize, merge.
+
+### A note on PDF → Office quality
+
+`pdf2docx` reconstructs text, tables and images from **digital** PDFs well. Two limits to know:
+
+- **Scanned PDFs** have no text layer — run OCR first (the OCR engine, or `ocrmypdf`) or you'll get an empty document.
+- **Complex multi-column / heavy layouts** are where open-source tools trail the commercial engines CloudConvert licenses. For those, the best open-source path is an **ML extractor** — [Docling](https://github.com/docling-project/docling) or [Marker](https://github.com/datalab-to/marker) — which you can add as an engine that shells out to `docling input.pdf --to docx`. It's not bundled by default because it pulls multi-GB models and benefits from a GPU.
 - **Fidelity:** bundled fonts, LibreOffice tuning, GPU transcode for video.
 - **Batch jobs & webhooks**, matching the import → convert → export task-chain model.
 

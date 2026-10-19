@@ -9,8 +9,13 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { run } from './convert.js';
 import { has, imageMagick } from './binaries.js';
+
+// Python helper scripts live at <project>/scripts.
+const SCRIPTS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts');
+const pdf2docxOk = () => !!has('python3') && fs.existsSync(path.join(SCRIPTS, 'pdf_to_docx.py'));
 
 const set = (...xs) => new Set(xs.map((x) => x.toLowerCase()));
 const inSet = (s, x) => s.has(String(x).toLowerCase());
@@ -125,6 +130,42 @@ const engines = [
       const produced = `${base}.${realExt}`;
       if (!fs.existsSync(produced)) throw new Error('Poppler produced no output');
       return produced;
+    },
+  },
+
+  {
+    id: 'pdf2docx',
+    label: 'pdf2docx',
+    binary: has('python3') || null,
+    get available() {
+      return pdf2docxOk();
+    },
+    canConvert(f, t) {
+      return this.available && f === 'pdf' && t === 'docx';
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs }) {
+      const out = path.join(workdir, `output.${outExt}`);
+      await run(has('python3'), [path.join(SCRIPTS, 'pdf_to_docx.py'), inputPath, out], { cwd: workdir, timeoutMs });
+      if (!fs.existsSync(out)) throw new Error('pdf2docx produced no output');
+      return out;
+    },
+  },
+
+  {
+    id: 'pdf2xlsx',
+    label: 'pdfplumber',
+    binary: has('python3') || null,
+    get available() {
+      return !!has('python3') && fs.existsSync(path.join(SCRIPTS, 'pdf_to_xlsx.py'));
+    },
+    canConvert(f, t) {
+      return this.available && f === 'pdf' && t === 'xlsx';
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs }) {
+      const out = path.join(workdir, `output.${outExt}`);
+      await run(has('python3'), [path.join(SCRIPTS, 'pdf_to_xlsx.py'), inputPath, out], { cwd: workdir, timeoutMs });
+      if (!fs.existsSync(out)) throw new Error('pdf table extraction produced no output');
+      return out;
     },
   },
 

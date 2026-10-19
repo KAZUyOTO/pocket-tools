@@ -23,9 +23,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       potrace \
       p7zip-full \
       libvips-tools \
+      python3 python3-pip \
       fonts-dejavu fonts-liberation fonts-noto-core fonts-noto-cjk \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Python engines: PDF -> editable DOCX (pdf2docx) and PDF -> XLSX (pdfplumber).
+RUN pip3 install --break-system-packages --no-cache-dir pdf2docx pdfplumber openpyxl
 
 # Debian's ImageMagick blocks PDF/PS by default; OpenConvert's whole job is
 # converting these, so allow them. (Inputs run sandboxed per job with a timeout.)
