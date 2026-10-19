@@ -15,9 +15,13 @@ docker compose up --build
 
 ### Without Docker (uses whatever binaries you already have)
 
+Needs a Redis instance and two processes — the API and at least one worker:
+
 ```bash
 npm install
-npm start
+redis-server &            # or point REDIS_URL at an existing Redis
+npm run worker &          # one or more workers
+npm start                 # the API
 # open http://localhost:3000
 ```
 
@@ -55,11 +59,16 @@ curl -s "localhost:3000/api/jobs/$ID/download" -o report.pdf
 ## How it works
 
 ```
-client → Fastify API → in-process queue → worker → engine (binary) → file back
+client → Fastify API ──┐                        ┌──→ engine (binary) → file back
+                       └→ Redis queue (BullMQ) ──┤
+            worker process(es) ─────────────────┘
 ```
 
+The API and the worker(s) are **separate processes** that share Redis and the `storage/` volume. Jobs survive an API restart (they sit in Redis) and a worker restart (an interrupted job is retried). Scale throughput by running more workers.
+
 - **Engines** (`src/engines.js`) — each wraps one binary and declares which `from → to` pairs it handles. `resolveEngine()` picks the first that fits. Adding a format is a one-line set change or a new engine object.
-- **Jobs** (`src/jobs.js`) — a `Map` + a worker pool bounded by `CONCURRENCY`. Files live under `storage/<jobId>/` and are deleted after `RETENTION_MS`. No database.
+- **Queue** (`src/queue.js`, `src/jobs.js`) — BullMQ on Redis. The API enqueues; workers consume at `CONCURRENCY` each. Files live under `storage/<jobId>/`.
+- **Worker** (`src/worker.js`) — the consumer, plus a restart-proof sweeper that deletes job files older than `RETENTION_MS`.
 - **Safety** — binaries are run with an argv array (never a shell string), each job gets an isolated temp dir, and every conversion has a hard timeout.
 
 ## Configuration (env vars)
@@ -71,11 +80,13 @@ client → Fastify API → in-process queue → worker → engine (binary) → f
 | `MAX_FILE_SIZE` | `1073741824` | max upload (bytes) |
 | `JOB_TIMEOUT_MS` | `300000` | kill a job after this long |
 | `RETENTION_MS` | `3600000` | delete files this long after finishing |
-| `STORAGE_DIR` | `./storage` | where job files live |
+| `STORAGE_DIR` | `./storage` | where job files live (shared by API + workers) |
+| `REDIS_URL` | `redis://127.0.0.1:6379` | queue backend |
+| `QUEUE_NAME` | `conversions` | BullMQ queue name |
 
 ## Roadmap
 
-- **Queue:** swap the in-process pool for Redis + BullMQ (multi-process, survives restarts) — only `src/jobs.js` changes.
+- ~~**Queue:** Redis + BullMQ, multi-process, survives restarts.~~ ✅ done (Phase 2)
 - **Engines:** Calibre (ebooks), Inkscape (vector), 7-Zip (archives), Assimp (3D), headless Chrome (url → pdf).
 - **Fidelity:** bundled fonts, LibreOffice tuning, GPU transcode for video.
 - **Batch jobs & webhooks**, matching the import → convert → export task-chain model.

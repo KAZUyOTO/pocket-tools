@@ -1,166 +1,113 @@
-// In-process job store + a tiny worker pool. No database, no Redis — jobs
-// live in a Map and files live on disk under storageDir/<jobId>/. This is
-// the MVP queue; swapping in BullMQ later means reimplementing enqueue() and
-// the worker loop and nothing else.
+// Job layer, Phase 2: backed by BullMQ/Redis instead of an in-process Map.
+//
+// The API is now a pure producer. It writes the uploaded file to disk, adds a
+// job to the queue, and later reads job state back from Redis. A separate
+// worker process (src/worker.js) does the actual conversion. Nothing is lost
+// if the API or a worker restarts — the queue and the files outlive both.
 
-import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
 import { config } from './config.js';
 import { resolveEngine } from './engines.js';
-
-/** @type {Map<string, Job>} */
-const jobs = new Map();
-const queue = [];
-let active = 0;
-
-/**
- * @typedef {object} Job
- * @property {string} id
- * @property {'queued'|'processing'|'done'|'error'} status
- * @property {string} from  input extension (no dot)
- * @property {string} to    target extension (no dot)
- * @property {string} originalName  what the user uploaded
- * @property {string} outputName    what they download
- * @property {string} dir   this job's working directory
- * @property {string} inputPath
- * @property {string|null} outputPath
- * @property {string|null} error
- * @property {string} engine
- * @property {number} createdAt
- * @property {number|null} finishedAt
- */
+import { queue } from './queue.js';
 
 export function jobDir(id) {
   return path.join(config.storageDir, id);
 }
 
-/** Create a job record + its working dir. Caller writes the input file. */
+/**
+ * Reserve a job: make its working dir and compute paths. Does NOT enqueue —
+ * the caller writes the input file first, then calls enqueue(). This ordering
+ * guarantees a worker never starts before the upload is on disk.
+ */
 export async function createJob({ originalName, from, to }) {
   const id = nanoid(12);
   const dir = jobDir(id);
   await fsp.mkdir(dir, { recursive: true });
-  const inputPath = path.join(dir, `input.${from}`);
   const base = path.basename(originalName, path.extname(originalName)) || 'file';
-
-  const job = {
+  return {
     id,
-    status: 'queued',
+    dir,
+    inputPath: path.join(dir, `input.${from}`),
+    outputName: `${base}.${to}`,
     from,
     to,
     originalName,
-    outputName: `${base}.${to}`,
-    dir,
-    inputPath,
-    outputPath: null,
-    error: null,
-    engine: resolveEngine(from, to)?.id || 'none',
-    createdAt: Date.now(),
-    finishedAt: null,
   };
-  jobs.set(id, job);
-  return job;
 }
 
-export function getJob(id) {
-  return jobs.get(id) || null;
+/** Put a prepared job (input already written) onto the queue. */
+export async function enqueue(job) {
+  await queue.add(
+    'convert',
+    {
+      from: job.from,
+      to: job.to,
+      originalName: job.originalName,
+      outputName: job.outputName,
+      dir: job.dir,
+      inputPath: job.inputPath,
+    },
+    { jobId: job.id },
+  );
 }
 
-/** Public view (no absolute paths leaked). */
-export function publicJob(job) {
+export async function getJob(id) {
+  return (await queue.getJob(id)) || null;
+}
+
+const STATE = {
+  completed: 'done',
+  failed: 'error',
+  active: 'processing',
+};
+
+/** Map a BullMQ job to the public JSON shape the UI/API expose. */
+export async function publicJob(job) {
+  const state = await job.getState();
+  const d = job.data || {};
   return {
     id: job.id,
-    status: job.status,
-    from: job.from,
-    to: job.to,
-    engine: job.engine,
-    originalName: job.originalName,
-    outputName: job.outputName,
-    error: job.error,
-    createdAt: job.createdAt,
-    finishedAt: job.finishedAt,
+    status: STATE[state] || 'queued',
+    from: d.from,
+    to: d.to,
+    engine: resolveEngine(d.from, d.to)?.id || 'none',
+    originalName: d.originalName,
+    outputName: d.outputName,
+    error: job.failedReason || null,
+    createdAt: job.timestamp || null,
+    finishedAt: job.finishedOn || null,
   };
 }
 
-/** Hand a ready job (input already written) to the pool. */
-export function enqueue(job) {
-  queue.push(job.id);
-  pump();
+/** Absolute path of the finished output, or null if not done. */
+export async function outputPathOf(job) {
+  const state = await job.getState();
+  if (state !== 'completed') return null;
+  return job.returnvalue || null;
 }
 
-function pump() {
-  while (active < config.concurrency && queue.length) {
-    const id = queue.shift();
-    const job = jobs.get(id);
-    if (!job) continue;
-    active++;
-    process(job).finally(() => {
-      active--;
-      pump();
-    });
-  }
-}
-
-async function process(job) {
-  job.status = 'processing';
-  const engine = resolveEngine(job.from, job.to);
-  if (!engine) {
-    job.status = 'error';
-    job.error = `No engine can convert .${job.from} to .${job.to}`;
-    job.finishedAt = Date.now();
-    scheduleCleanup(job);
-    return;
-  }
-  try {
-    const outputPath = await engine.run({
-      inputPath: job.inputPath,
-      outExt: job.to,
-      workdir: job.dir,
-      timeoutMs: config.jobTimeoutMs,
-    });
-    job.outputPath = outputPath;
-    job.status = 'done';
-  } catch (err) {
-    job.status = 'error';
-    job.error = String(err.message || err);
-  } finally {
-    job.finishedAt = Date.now();
-    scheduleCleanup(job);
-  }
-}
-
-function scheduleCleanup(job) {
-  setTimeout(() => remove(job.id), config.retentionMs).unref?.();
-}
-
+/** Remove a job's files (and its queue record if present). */
 export async function remove(id) {
-  const job = jobs.get(id);
-  if (!job) return;
-  jobs.delete(id);
   try {
-    await fsp.rm(job.dir, { recursive: true, force: true });
+    const job = await queue.getJob(id);
+    if (job) await job.remove();
+  } catch {
+    /* not in queue */
+  }
+  try {
+    await fsp.rm(jobDir(id), { recursive: true, force: true });
   } catch {
     /* already gone */
   }
 }
 
-/** On boot, wipe any leftover job dirs from a previous run. */
-export async function sweepOnBoot() {
-  try {
-    const entries = await fsp.readdir(config.storageDir);
-    await Promise.all(
-      entries
-        .filter((e) => e !== '.gitkeep')
-        .map((e) => fsp.rm(path.join(config.storageDir, e), { recursive: true, force: true })),
-    );
-  } catch {
-    if (!fs.existsSync(config.storageDir)) {
-      await fsp.mkdir(config.storageDir, { recursive: true });
-    }
-  }
+export async function ensureStorage() {
+  await fsp.mkdir(config.storageDir, { recursive: true });
 }
 
-export function stats() {
-  return { total: jobs.size, active, queued: queue.length };
+export async function stats() {
+  const c = await queue.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed');
+  return { queued: c.waiting + c.delayed, active: c.active, completed: c.completed, failed: c.failed };
 }

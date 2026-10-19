@@ -25,4 +25,9 @@ export const config = {
 
   // Delete a job's files this long after it finishes (ms). Default 1 h.
   retentionMs: Number(process.env.RETENTION_MS || 60 * 60 * 1000),
+
+  // Redis / BullMQ (Phase 2). The queue lives here so the API and the
+  // worker(s) are separate processes and jobs survive a restart.
+  redisUrl: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+  queueName: process.env.QUEUE_NAME || 'conversions',
 };

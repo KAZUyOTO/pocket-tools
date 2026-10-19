@@ -1,16 +1,39 @@
 services:
-  openconvert:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - oc-redis:/data
+
+  api:
     build: .
+    command: node src/server.js
     ports:
       - "3000:3000"
-    environment:
+    environment: &env
+      REDIS_URL: "redis://redis:6379"
       CONCURRENCY: "2"
       MAX_FILE_SIZE: "1073741824" # 1 GB
       JOB_TIMEOUT_MS: "300000"    # 5 min
       RETENTION_MS: "3600000"     # 1 h
+      STORAGE_DIR: "/data"
     volumes:
       - oc-data:/data
+    depends_on:
+      - redis
     restart: unless-stopped
+
+  worker:
+    build: .
+    command: node src/worker.js
+    environment: *env
+    volumes:
+      - oc-data:/data # MUST share the same volume as the API
+    depends_on:
+      - redis
+    restart: unless-stopped
+    # Scale out with: docker compose up --scale worker=4
 
 volumes:
   oc-data:
+  oc-redis:
