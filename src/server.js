@@ -16,7 +16,7 @@ import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 
 import { config } from './config.js';
-import { supportedConversions, engineStatus, resolveEngine } from './engines.js';
+import { supportedConversions, engineStatus, resolveRoute } from './engines.js';
 import {
   createJob,
   enqueue,
@@ -54,7 +54,7 @@ app.post('/api/convert', async (req, reply) => {
   const from = EXT(data.filename);
   if (!from) return reply.code(400).send({ error: 'Uploaded file has no extension' });
 
-  if (!resolveEngine(from, to)) {
+  if (!resolveRoute(from, to)) {
     data.file.resume(); // drain
     return reply.code(422).send({ error: `Cannot convert .${from} to .${to}` });
   }

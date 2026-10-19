@@ -10,7 +10,7 @@ import path from 'node:path';
 import { Worker } from 'bullmq';
 import { config } from './config.js';
 import { connection, queue } from './queue.js';
-import { resolveEngine } from './engines.js';
+import { resolveRoute, getEngine } from './engines.js';
 
 const LIVE = new Set(['waiting', 'active', 'delayed', 'waiting-children', 'prioritized']);
 
@@ -19,16 +19,24 @@ const log = (...a) => console.log(new Date().toISOString(), '[worker]', ...a);
 // --- the processor --------------------------------------------------------
 async function runJob(job) {
   const { from, to, inputPath, dir } = job.data;
-  const engine = resolveEngine(from, to);
-  if (!engine) throw new Error(`No engine can convert .${from} to .${to}`);
-  log(`job ${job.id}: ${from} -> ${to} via ${engine.id}`);
-  const outputPath = await engine.run({
-    inputPath,
-    outExt: to,
-    workdir: dir,
-    timeoutMs: config.jobTimeoutMs,
-  });
-  return outputPath; // stored as job.returnvalue, read by the download route
+  const route = resolveRoute(from, to);
+  if (!route) throw new Error(`No route can convert .${from} to .${to}`);
+  log(`job ${job.id}: ${from} -> ${to} via ${route.map((s) => s.engineId).join(' → ')}`);
+
+  // Run each step, feeding one step's output into the next.
+  let current = inputPath;
+  let produced;
+  for (const step of route) {
+    const engine = getEngine(step.engineId);
+    produced = await engine.run({
+      inputPath: current,
+      outExt: step.to,
+      workdir: dir,
+      timeoutMs: config.jobTimeoutMs,
+    });
+    current = produced;
+  }
+  return produced; // stored as job.returnvalue, read by the download route
 }
 
 const worker = new Worker(config.queueName, runJob, {

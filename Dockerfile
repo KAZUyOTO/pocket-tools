@@ -14,12 +14,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       pandoc \
       calibre \
       ghostscript \
+      poppler-utils \
       inkscape \
+      assimp-utils \
+      fontforge \
       p7zip-full \
       libvips-tools \
       fonts-dejavu fonts-liberation fonts-noto-core fonts-noto-cjk \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Debian's ImageMagick blocks PDF/PS by default; OpenConvert's whole job is
+# converting these, so allow them. (Inputs run sandboxed per job with a timeout.)
+RUN for p in /etc/ImageMagick-6/policy.xml /etc/ImageMagick-7/policy.xml; do \
+      [ -f "$p" ] && sed -i -E 's/rights="none" pattern="(PDF|PS|EPS|XPS)"/rights="read|write" pattern="\1"/' "$p" || true; \
+    done
 
 WORKDIR /app
 

@@ -9,7 +9,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
 import { config } from './config.js';
-import { resolveEngine } from './engines.js';
+import { routeLabel } from './engines.js';
 import { queue } from './queue.js';
 
 export function jobDir(id) {
@@ -72,7 +72,7 @@ export async function publicJob(job) {
     status: STATE[state] || 'queued',
     from: d.from,
     to: d.to,
-    engine: resolveEngine(d.from, d.to)?.id || 'none',
+    engine: routeLabel(d.from, d.to),
     originalName: d.originalName,
     outputName: d.outputName,
     error: job.failedReason || null,

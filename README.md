@@ -25,18 +25,31 @@ npm start                 # the API
 # open http://localhost:3000
 ```
 
-Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript inkscape p7zip-full libvips-tools`.
+Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge p7zip-full libvips-tools`.
 
-## What it converts today
+## What it converts
 
-| Family | Engine | Examples |
+Eleven engines across every CloudConvert category. With one-hop **chaining** (below) that's ~2,000 reachable conversions.
+
+| Category | Engine | Examples |
 | --- | --- | --- |
-| Images | ImageMagick | png, jpg, webp, gif, bmp, tiff, avif |
-| Audio / video | FFmpeg | mp4, mov, webm, mkv → mp3, wav, flac, ogg (and video→audio) |
-| Documents | LibreOffice | docx, xlsx, pptx, odt, html, txt, csv ↔ pdf |
-| Markup | Pandoc | md, rst, html, tex, epub, docx |
+| Images (raster) | ImageMagick | png, jpg, webp, gif, bmp, tiff, avif, heic, ico, psd → each other, and image → pdf |
+| Audio / video | FFmpeg | mp4, mov, webm, mkv, mp3, wav, flac, ogg (video→audio, video↔gif) |
+| Documents / sheets / slides | LibreOffice | docx, xlsx, pptx, odt, csv, html, txt ↔ pdf |
+| Markup | Pandoc | md, rst, html, tex, epub, docx, org |
+| PDF extract | Poppler | pdf → png, jpg, tiff, svg, ps, txt, html |
+| Vector | Inkscape | svg, emf, wmf → pdf, eps, ps, png |
+| PostScript | Ghostscript | ps, eps ↔ pdf |
+| Ebooks | Calibre | epub, mobi, azw3, fb2, lit, pdb ↔ each other, pdf, docx |
+| 3D meshes | Assimp | obj, stl, ply, gltf, glb, fbx, dae, 3ds |
+| Archives | 7-Zip / tar | zip, 7z, tar, gz, tgz (repack); extracts rar |
+| Fonts | FontForge | ttf, otf, woff, woff2 |
 
-The live list is always at `GET /api/formats` and drives the UI dropdown.
+The live list is always at `GET /api/formats` and drives the UI dropdown — only engines whose binary is installed appear.
+
+### Chaining
+
+When no single engine does `from → to` directly, OpenConvert routes through an intermediate (pdf, html, png, …). So `md → pdf` runs `pandoc → libreoffice`, and `svg → jpg` runs `inkscape → poppler`, automatically. The route is shown in each job's `engine` field.
 
 ## API
 
@@ -87,7 +100,8 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 ## Roadmap
 
 - ~~**Queue:** Redis + BullMQ, multi-process, survives restarts.~~ ✅ done (Phase 2)
-- **Engines:** Calibre (ebooks), Inkscape (vector), 7-Zip (archives), Assimp (3D), headless Chrome (url → pdf).
+- ~~**Engines:** Calibre, Inkscape, Ghostscript, Poppler, Assimp, 7-Zip, FontForge + one-hop chaining.~~ ✅ done (Phase 3)
+- **Engines, more:** headless Chrome (url → pdf), CAD (dxf), RAW photo (LibRaw), subtitles.
 - **Fidelity:** bundled fonts, LibreOffice tuning, GPU transcode for video.
 - **Batch jobs & webhooks**, matching the import → convert → export task-chain model.
 
