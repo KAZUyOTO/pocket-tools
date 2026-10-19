@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenConvert</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <h1>OpenConvert</h1>
+        <p class="sub">Self-hosted file conversion. Nothing leaves your server.</p>
+      </header>
+
+      <section id="drop" class="drop" tabindex="0" aria-label="Drop a file or click to choose">
+        <input id="file" type="file" hidden />
+        <div class="drop-inner">
+          <div class="drop-icon">↑</div>
+          <p class="drop-main">Drop a file here or <span class="link">browse</span></p>
+          <p class="drop-hint">images · audio · video · documents</p>
+        </div>
+      </section>
+
+      <section id="panel" class="panel" hidden>
+        <div class="file-row">
+          <span id="file-name" class="file-name"></span>
+          <button id="reset" class="ghost" type="button">change</button>
+        </div>
+        <div class="convert-row">
+          <label for="to">Convert to</label>
+          <select id="to" disabled></select>
+          <button id="go" class="primary" type="button" disabled>Convert</button>
+        </div>
+        <div id="status" class="status" hidden></div>
+      </section>
+
+      <footer>
+        <span id="engines" class="engines"></span>
+        <a href="https://github.com" class="src" id="srclink">source</a>
+      </footer>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "openconvert",
+  "version": "0.1.0",
+  "description": "Self-hosted, fully open-source file conversion service. Upload a file, pick a format, get it back. Powered by ffmpeg, LibreOffice, ImageMagick, pandoc and friends.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^9.0.1",
+    "@fastify/static": "^8.0.3",
+    "fastify": "^5.2.0",
+    "nanoid": "^5.0.9"
+  }
+}

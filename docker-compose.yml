@@ -1,0 +1,16 @@
+services:
+  openconvert:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      CONCURRENCY: "2"
+      MAX_FILE_SIZE: "1073741824" # 1 GB
+      JOB_TIMEOUT_MS: "300000"    # 5 min
+      RETENTION_MS: "3600000"     # 1 h
+    volumes:
+      - oc-data:/data
+    restart: unless-stopped
+
+volumes:
+  oc-data:
