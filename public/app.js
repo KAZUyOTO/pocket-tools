@@ -12,6 +12,7 @@ let conversions = {};
 let chosen = null; // { file, ext }
 
 const ext = (name) => (name.split('.').pop() || '').toLowerCase();
+const RASTER = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'tif', 'avif', 'heic', 'heif']);
 
 init();
 
@@ -69,7 +70,9 @@ function pick(file) {
   statusEl.className = 'status';
   statusEl.innerHTML = '';
 
-  const targets = conversions[e] || [];
+  const targets = (conversions[e] || []).slice();
+  // For images, allow same-format output so you can resize/compress/enhance.
+  if (RASTER.has(e) && !targets.includes(e)) targets.unshift(e);
   toSelect.innerHTML = '';
   if (!targets.length) {
     toSelect.disabled = true;
@@ -138,9 +141,17 @@ async function convert() {
   const form = new FormData();
   form.append('file', chosen.file, chosen.file.name);
 
+  // optional image ops
+  const params = new URLSearchParams({ to: toSelect.value });
+  const w = $('w').value.trim();
+  const q = $('q').value.trim();
+  if (w) params.set('width', w);
+  if (q) params.set('quality', q);
+  if ($('enh').checked) params.set('enhance', '1');
+
   let job;
   try {
-    const res = await fetch(`/api/convert?to=${encodeURIComponent(toSelect.value)}`, {
+    const res = await fetch(`/api/convert?${params.toString()}`, {
       method: 'POST',
       body: form,
     });

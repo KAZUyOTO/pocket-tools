@@ -51,6 +51,36 @@ Eleven engines across every CloudConvert category. With one-hop **chaining** (be
 
 The live list is always at `GET /api/formats` and drives the UI dropdown — only engines whose binary is installed appear.
 
+### Image operations (resize · compress · enhance)
+
+Any image output can carry optional operations via query params. They run after
+the conversion, and work on their own too (same input and output format):
+
+```bash
+# resize to 800px wide (aspect kept), as webp
+curl -s -F "file=@photo.jpg" "localhost:3000/api/convert?to=webp&width=800"
+
+# compress a jpg in place (quality 1–100)
+curl -s -F "file=@photo.jpg" "localhost:3000/api/convert?to=jpg&quality=60"
+
+# GFPGAN face restoration + 2x upscale
+curl -s -F "file=@portrait.png" "localhost:3000/api/convert?to=png&enhance=1&scale=2"
+```
+
+| Param | Meaning |
+| --- | --- |
+| `width`, `height` | resize (give one to keep aspect ratio) |
+| `quality` | 1–100, JPEG/WebP compression; also strips metadata |
+| `enhance=1` | GFPGAN face restoration + upscale |
+| `scale` | upscale factor for enhance (default 2) |
+| `version` | GFPGAN model: v1.2 / v1.3 / v1.4 / RestoreFormer / CodeFormer |
+
+> **How enhance works:** it calls a hosted GFPGAN **Hugging Face Space**
+> (`maxorange/GFPGAN-5`) over the network — so nothing heavy (torch, model
+> weights) is installed locally. Two consequences: the image is sent to that
+> third-party Space (don't use it for private/sensitive photos), and a call
+> takes ~1–2 minutes. Point `GFPGAN_SPACE` at your own Space to self-host.
+
 ### Chaining
 
 When no single engine does `from → to` directly, OpenConvert routes through an intermediate (pdf, html, png, …). So `md → pdf` runs `pandoc → libreoffice`, and `svg → jpg` runs `inkscape → poppler`, automatically. The route is shown in each job's `engine` field.
@@ -110,6 +140,7 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 | `STORAGE_DIR` | `./storage` | where job files live (shared by API + workers) |
 | `REDIS_URL` | `redis://127.0.0.1:6379` | queue backend |
 | `QUEUE_NAME` | `conversions` | BullMQ queue name |
+| `GFPGAN_SPACE` | `maxorange/GFPGAN-5` | Hugging Face Space used for enhance |
 
 ## Roadmap
 
@@ -118,8 +149,9 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 - ~~**OCR** (image → text), **URL/HTML → PDF/PNG** (wkhtmltopdf), **raster → SVG** (vtracer/potrace).~~ ✅ done (Phase 4)
 - ~~**PDF → editable Office:** pdf → docx (pdf2docx) and pdf → xlsx (pdfplumber).~~ ✅ done (Phase 5)
 - **Higher-fidelity PDF → Office:** optional ML engine (IBM Docling / Marker) — far better on complex layouts, but downloads models and wants more compute. See note below.
+- ~~**Image ops:** resize, compress, GFPGAN enhance (via a hosted Space).~~ ✅ done (Phase 6)
 - **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), subtitles, pdf → pptx.
-- **Operations:** OCR scanned pdf → searchable pdf, compress/optimize, merge.
+- **Operations, more:** OCR scanned pdf → searchable pdf, merge, video/pdf compress.
 
 ### A note on PDF → Office quality
 

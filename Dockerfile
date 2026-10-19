@@ -28,8 +28,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Python engines: PDF -> editable DOCX (pdf2docx) and PDF -> XLSX (pdfplumber).
-RUN pip3 install --break-system-packages --no-cache-dir pdf2docx pdfplumber openpyxl
+# Python engines: PDF -> editable DOCX/XLSX, and the GFPGAN client (which calls
+# a hosted Space over the network, so NO local torch/model is bundled).
+RUN pip3 install --break-system-packages --no-cache-dir pdf2docx pdfplumber openpyxl gradio_client
 
 # Debian's ImageMagick blocks PDF/PS by default; OpenConvert's whole job is
 # converting these, so allow them. (Inputs run sandboxed per job with a timeout.)

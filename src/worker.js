@@ -11,6 +11,7 @@ import { Worker } from 'bullmq';
 import { config } from './config.js';
 import { connection, queue } from './queue.js';
 import { resolveRoute, getEngine } from './engines.js';
+import { postProcess, hasOps, isRaster } from './postprocess.js';
 
 const LIVE = new Set(['waiting', 'active', 'delayed', 'waiting-children', 'prioritized']);
 
@@ -18,27 +19,41 @@ const log = (...a) => console.log(new Date().toISOString(), '[worker]', ...a);
 
 // --- the processor --------------------------------------------------------
 async function runJob(job) {
-  const { from, to, inputPath, dir, sourceUrl } = job.data;
-  const route = resolveRoute(from, to);
-  if (!route) throw new Error(`No route can convert .${from} to .${to}`);
-  log(`job ${job.id}: ${from} -> ${to} via ${route.map((s) => s.engineId).join(' → ')}`);
-
-  // Run each step, feeding one step's output into the next. The URL (if any)
-  // is only the source of the FIRST step; later steps read the prior output.
-  let current = inputPath;
+  const { from, to, inputPath, dir, sourceUrl, opts } = job.data;
   let produced;
-  for (let i = 0; i < route.length; i++) {
-    const step = route[i];
-    const engine = getEngine(step.engineId);
-    produced = await engine.run({
-      inputPath: current,
-      outExt: step.to,
-      workdir: dir,
-      timeoutMs: config.jobTimeoutMs,
-      sourceUrl: i === 0 ? sourceUrl : null,
-    });
-    current = produced;
+
+  if (from === to) {
+    // Same format in and out: no conversion, just the ops (resize/compress/enhance).
+    produced = path.join(dir, `ident.${to}`);
+    await fsp.copyFile(inputPath, produced);
+    log(`job ${job.id}: ${from} (ops only)`);
+  } else {
+    const route = resolveRoute(from, to);
+    if (!route) throw new Error(`No route can convert .${from} to .${to}`);
+    log(`job ${job.id}: ${from} -> ${to} via ${route.map((s) => s.engineId).join(' → ')}`);
+    // Run each step, feeding one step's output into the next. The URL (if any)
+    // is only the source of the FIRST step; later steps read the prior output.
+    let current = inputPath;
+    for (let i = 0; i < route.length; i++) {
+      const step = route[i];
+      const engine = getEngine(step.engineId);
+      produced = await engine.run({
+        inputPath: current,
+        outExt: step.to,
+        workdir: dir,
+        timeoutMs: config.jobTimeoutMs,
+        sourceUrl: i === 0 ? sourceUrl : null,
+      });
+      current = produced;
+    }
   }
+
+  // Post-processing ops (resize / compress / GFPGAN enhance) on image outputs.
+  if (opts && hasOps(opts) && isRaster(to)) {
+    log(`job ${job.id}: post-process ${JSON.stringify(opts)}`);
+    produced = await postProcess(produced, to, opts, dir, config.jobTimeoutMs);
+  }
+
   return produced; // stored as job.returnvalue, read by the download route
 }
 

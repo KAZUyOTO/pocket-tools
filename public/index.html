@@ -32,6 +32,12 @@
           <select id="to" disabled></select>
           <button id="go" class="primary" type="button" disabled>Convert</button>
         </div>
+        <div class="imgops" id="imgops">
+          <span class="imgops-label">image options</span>
+          <input id="w" type="number" min="1" placeholder="width px" />
+          <input id="q" type="number" min="1" max="100" placeholder="quality" />
+          <label class="chk"><input id="enh" type="checkbox" /> Enhance faces (GFPGAN)</label>
+        </div>
         <div id="status" class="status" hidden></div>
       </section>
 

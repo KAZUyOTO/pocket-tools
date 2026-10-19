@@ -17,6 +17,7 @@ import fastifyStatic from '@fastify/static';
 
 import { config } from './config.js';
 import { supportedConversions, engineStatus, resolveRoute } from './engines.js';
+import { isRaster, enhanceAvailable } from './postprocess.js';
 import {
   createJob,
   enqueue,
@@ -31,6 +32,29 @@ import { closeQueue } from './queue.js';
 
 const EXT = (name) => path.extname(String(name || '')).slice(1).toLowerCase();
 const CLEAN = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const GFPGAN_VERSIONS = ['v1.2', 'v1.3', 'v1.4', 'RestoreFormer', 'CodeFormer'];
+const numIn = (v, lo, hi) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= lo && n <= hi ? n : null;
+};
+
+/** Pull optional image operations off the query string. */
+function parseOps(q) {
+  const opts = {};
+  const w = numIn(q.width, 1, 20000);
+  const h = numIn(q.height, 1, 20000);
+  const quality = numIn(q.quality, 1, 100);
+  if (w) opts.width = w;
+  if (h) opts.height = h;
+  if (quality) opts.quality = quality;
+  if (q.enhance === '1' || q.enhance === 'true') {
+    opts.enhance = true;
+    opts.scale = numIn(q.scale, 1, 4) || 2;
+    opts.version = GFPGAN_VERSIONS.includes(q.version) ? q.version : 'v1.4';
+  }
+  return Object.keys(opts).length ? opts : null;
+}
 
 const app = Fastify({ logger: true, bodyLimit: config.maxFileSize });
 
@@ -65,18 +89,29 @@ app.post('/api/convert', async (req, reply) => {
     return reply.code(202).send(await publicJob(qj));
   }
 
+  const ops = parseOps(req.query);
+
   const data = await req.file();
   if (!data) return reply.code(400).send({ error: 'No file uploaded' });
 
   const from = EXT(data.filename);
   if (!from) return reply.code(400).send({ error: 'Uploaded file has no extension' });
 
-  if (!resolveRoute(from, to)) {
+  if (ops?.enhance && !enhanceAvailable()) {
+    data.file.resume();
+    return reply.code(422).send({ error: 'Enhance (GFPGAN) is not available on this server' });
+  }
+  if (from === to) {
+    if (!ops || !isRaster(to)) {
+      data.file.resume();
+      return reply.code(422).send({ error: 'Same input and output format with no resize/compress/enhance' });
+    }
+  } else if (!resolveRoute(from, to)) {
     data.file.resume(); // drain
     return reply.code(422).send({ error: `Cannot convert .${from} to .${to}` });
   }
 
-  const job = await createJob({ originalName: data.filename, from, to });
+  const job = await createJob({ originalName: data.filename, from, to, opts: ops });
   try {
     await pipeline(data.file, fs.createWriteStream(job.inputPath));
   } catch (err) {

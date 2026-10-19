@@ -21,7 +21,7 @@ export function jobDir(id) {
  * the caller writes the input file first, then calls enqueue(). This ordering
  * guarantees a worker never starts before the upload is on disk.
  */
-export async function createJob({ originalName, from, to, sourceUrl }) {
+export async function createJob({ originalName, from, to, sourceUrl, opts }) {
   const id = nanoid(12);
   const dir = jobDir(id);
   await fsp.mkdir(dir, { recursive: true });
@@ -35,6 +35,7 @@ export async function createJob({ originalName, from, to, sourceUrl }) {
     to,
     originalName,
     sourceUrl: sourceUrl || null,
+    opts: opts || null,
   };
 }
 
@@ -50,6 +51,7 @@ export async function enqueue(job) {
       dir: job.dir,
       inputPath: job.inputPath,
       sourceUrl: job.sourceUrl || null,
+      opts: job.opts || null,
     },
     { jobId: job.id },
   );
@@ -65,6 +67,15 @@ const STATE = {
   active: 'processing',
 };
 
+function opsLabel(opts) {
+  if (!opts) return 'copy';
+  const parts = [];
+  if (opts.enhance) parts.push('gfpgan');
+  if (opts.width || opts.height) parts.push('resize');
+  if (opts.quality) parts.push('compress');
+  return parts.join('+') || 'copy';
+}
+
 /** Map a BullMQ job to the public JSON shape the UI/API expose. */
 export async function publicJob(job) {
   const state = await job.getState();
@@ -74,7 +85,7 @@ export async function publicJob(job) {
     status: STATE[state] || 'queued',
     from: d.from,
     to: d.to,
-    engine: routeLabel(d.from, d.to),
+    engine: d.from === d.to ? opsLabel(d.opts) : routeLabel(d.from, d.to),
     originalName: d.originalName,
     outputName: d.outputName,
     error: job.failedReason || null,
