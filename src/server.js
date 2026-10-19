@@ -48,6 +48,23 @@ app.post('/api/convert', async (req, reply) => {
   const to = CLEAN(req.query.to);
   if (!to) return reply.code(400).send({ error: 'Missing ?to=<format>' });
 
+  // URL source (no file): POST /api/convert?to=pdf&url=https://example.com
+  const url = req.query.url ? String(req.query.url) : null;
+  if (url) {
+    if (!/^https?:\/\//i.test(url)) return reply.code(400).send({ error: 'URL must start with http:// or https://' });
+    if (!resolveRoute('url', to)) return reply.code(422).send({ error: `Cannot render a URL to .${to}` });
+    let host = 'page';
+    try {
+      host = new URL(url).hostname.replace(/[^a-z0-9.-]/gi, '') || 'page';
+    } catch {
+      return reply.code(400).send({ error: 'Invalid URL' });
+    }
+    const job = await createJob({ originalName: `${host}.html`, from: 'url', to, sourceUrl: url });
+    await enqueue(job);
+    const qj = await getJob(job.id);
+    return reply.code(202).send(await publicJob(qj));
+  }
+
   const data = await req.file();
   if (!data) return reply.code(400).send({ error: 'No file uploaded' });
 

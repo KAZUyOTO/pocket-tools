@@ -42,6 +42,14 @@ const ARCHIVE_OUT = set('zip', '7z', 'tar', 'gz', 'tgz');
 
 const FONT = set('ttf', 'otf', 'woff', 'woff2');
 
+const OCR_IN = set('png', 'jpg', 'jpeg', 'tiff', 'tif', 'bmp'); // tesseract reads these
+const HTML_IN = set('html', 'htm', 'url'); // wkhtml: local files + live URLs
+const WK_OUT = set('pdf', 'png', 'jpg');
+const TRACE_IN = set('png', 'jpg', 'jpeg', 'bmp', 'gif', 'tiff', 'tif'); // raster -> svg
+
+// vtracer (colour) installs to ~/.cargo/bin in dev; fall back to that path.
+const vtracerBin = () => has('vtracer') || (fs.existsSync('/root/.cargo/bin/vtracer') ? '/root/.cargo/bin/vtracer' : null);
+
 // LibreOffice needs an explicit filter for a couple of targets.
 const LO_FILTER = { txt: 'txt:Text', csv: 'csv:Text - txt - csv (StarCalc)' };
 
@@ -161,6 +169,30 @@ const engines = [
         ['-dBATCH', '-dNOPAUSE', '-dSAFER', `-sDEVICE=${device}`, `-sOutputFile=${out}`, inputPath],
         { cwd: workdir, timeoutMs },
       );
+      return out;
+    },
+  },
+
+  {
+    id: 'wkhtml',
+    label: 'wkhtmltopdf',
+    binary: has('wkhtmltopdf') || null,
+    get available() {
+      return !!has('wkhtmltopdf');
+    },
+    canConvert(f, t) {
+      return this.available && inSet(HTML_IN, f) && inSet(WK_OUT, t);
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs, sourceUrl }) {
+      const source = sourceUrl || inputPath; // a live URL, or a local .html file
+      const out = path.join(workdir, `output.${outExt}`);
+      if (outExt === 'pdf') {
+        await run(has('wkhtmltopdf'), ['--quiet', '--enable-local-file-access', source, out], { cwd: workdir, timeoutMs });
+      } else {
+        const bin = has('wkhtmltoimage') || has('wkhtmltopdf');
+        await run(bin, ['--quiet', '--enable-local-file-access', '--format', outExt, source, out], { cwd: workdir, timeoutMs });
+      }
+      if (!fs.existsSync(out)) throw new Error('wkhtmltopdf produced no output');
       return out;
     },
   },
@@ -322,6 +354,54 @@ const engines = [
       return out;
     },
   },
+
+  {
+    id: 'ocr',
+    label: 'Tesseract OCR',
+    binary: has('tesseract') || null,
+    get available() {
+      return !!has('tesseract');
+    },
+    canConvert(f, t) {
+      return this.available && inSet(OCR_IN, f) && t === 'txt';
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs }) {
+      // tesseract appends .txt to the output base.
+      const base = path.join(workdir, 'output');
+      await run(has('tesseract'), [inputPath, base, '-l', 'eng'], { cwd: workdir, timeoutMs });
+      const out = `${base}.txt`;
+      if (!fs.existsSync(out)) throw new Error('OCR produced no output');
+      return out;
+    },
+  },
+
+  {
+    id: 'trace',
+    label: 'vtracer / potrace',
+    get binary() {
+      return vtracerBin() || has('potrace') || null;
+    },
+    get available() {
+      return !!(vtracerBin() || (has('potrace') && im));
+    },
+    canConvert(f, t) {
+      return this.available && inSet(TRACE_IN, f) && t === 'svg';
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs }) {
+      const out = path.join(workdir, 'output.svg');
+      const vt = vtracerBin();
+      if (vt) {
+        await run(vt, ['--input', inputPath, '--output', out, '--colormode', 'color'], { cwd: workdir, timeoutMs });
+      } else {
+        // potrace needs a bitmap; rasterize to PGM first, trace in B&W.
+        const pnm = path.join(workdir, 'trace.pgm');
+        await run(im.bin, [inputPath, pnm], { cwd: workdir, timeoutMs });
+        await run(has('potrace'), ['-s', '-o', out, pnm], { cwd: workdir, timeoutMs });
+      }
+      if (!fs.existsSync(out)) throw new Error('Trace produced no output');
+      return out;
+    },
+  },
 ];
 
 const byId = new Map(engines.map((e) => [e.id, e]));
@@ -350,6 +430,9 @@ export function resolveRoute(from, to) {
   if (direct) return [{ engineId: direct.id, from, to }];
   for (const hub of HUBS) {
     if (hub === from || hub === to) continue;
+    // Never bridge to text through a PDF: extracting text from an image-only
+    // PDF yields nothing. Routing image->txt stays on the OCR (png) path.
+    if (to === 'txt' && hub === 'pdf') continue;
     const a = resolveEngine(from, hub);
     const b = resolveEngine(hub, to);
     if (a && b) {
@@ -370,7 +453,7 @@ export function routeLabel(from, to) {
 }
 
 // ---- Catalog (cached; depends only on which binaries exist) ----------------
-const INPUT_UNIVERSE = set(...RASTER, ...MEDIA, 'gif', ...VECTOR, ...OFFICE_IN, ...MARKUP_IN, ...EBOOK_IN, ...THREED, ...ARCHIVE_IN, ...FONT, 'pdf');
+const INPUT_UNIVERSE = set(...RASTER, ...MEDIA, 'gif', ...VECTOR, ...OFFICE_IN, ...MARKUP_IN, ...EBOOK_IN, ...THREED, ...ARCHIVE_IN, ...FONT, 'pdf', 'url');
 const OUTPUT_UNIVERSE = set(...RASTER, ...MEDIA, 'gif', 'pdf', 'ps', 'eps', 'svg', 'txt', 'html', ...OFFICE_OUT, ...MARKUP_OUT, ...EBOOK_OUT, ...THREED, ...ARCHIVE_OUT, ...FONT);
 
 let _catalog = null;

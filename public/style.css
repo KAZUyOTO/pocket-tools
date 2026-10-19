@@ -88,5 +88,14 @@ button:disabled { opacity: 0.5; cursor: default; }
   background: var(--good); color: #06231a; font-weight: 600; padding: 9px 16px; border-radius: 10px;
 }
 
+.divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 14px; color: var(--dim); font-size: 12px; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.urlbox { display: flex; gap: 10px; flex-wrap: wrap; }
+.urlbox input {
+  flex: 1 1 200px; min-width: 160px;
+  background: #11131a; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 14px;
+}
+
 footer { display: flex; justify-content: space-between; margin-top: 16px; font-size: 12px; color: var(--dim); }
 .src { color: var(--dim); }

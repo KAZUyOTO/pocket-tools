@@ -18,21 +18,24 @@ const log = (...a) => console.log(new Date().toISOString(), '[worker]', ...a);
 
 // --- the processor --------------------------------------------------------
 async function runJob(job) {
-  const { from, to, inputPath, dir } = job.data;
+  const { from, to, inputPath, dir, sourceUrl } = job.data;
   const route = resolveRoute(from, to);
   if (!route) throw new Error(`No route can convert .${from} to .${to}`);
   log(`job ${job.id}: ${from} -> ${to} via ${route.map((s) => s.engineId).join(' → ')}`);
 
-  // Run each step, feeding one step's output into the next.
+  // Run each step, feeding one step's output into the next. The URL (if any)
+  // is only the source of the FIRST step; later steps read the prior output.
   let current = inputPath;
   let produced;
-  for (const step of route) {
+  for (let i = 0; i < route.length; i++) {
+    const step = route[i];
     const engine = getEngine(step.engineId);
     produced = await engine.run({
       inputPath: current,
       outExt: step.to,
       workdir: dir,
       timeoutMs: config.jobTimeoutMs,
+      sourceUrl: i === 0 ? sourceUrl : null,
     });
     current = produced;
   }

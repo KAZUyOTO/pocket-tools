@@ -35,6 +35,18 @@
         <div id="status" class="status" hidden></div>
       </section>
 
+      <div class="divider"><span>or convert a web page</span></div>
+      <section class="urlbox">
+        <input id="url" type="url" inputmode="url" placeholder="https://example.com" />
+        <select id="urlto">
+          <option value="pdf">PDF</option>
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+        </select>
+        <button id="urlgo" class="primary" type="button">Render</button>
+      </section>
+      <div id="urlstatus" class="status" hidden></div>
+
       <footer>
         <span id="engines" class="engines"></span>
         <a href="https://github.com" class="src" id="srclink">source</a>

@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       inkscape \
       assimp-utils \
       fontforge \
+      tesseract-ocr tesseract-ocr-eng \
+      wkhtmltopdf \
+      potrace \
       p7zip-full \
       libvips-tools \
       fonts-dejavu fonts-liberation fonts-noto-core fonts-noto-cjk \
@@ -29,6 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN for p in /etc/ImageMagick-6/policy.xml /etc/ImageMagick-7/policy.xml; do \
       [ -f "$p" ] && sed -i -E 's/rights="none" pattern="(PDF|PS|EPS|XPS)"/rights="read|write" pattern="\1"/' "$p" || true; \
     done
+
+# Raster->SVG uses potrace (B&W) by default. For colour tracing, add vtracer:
+#   RUN cargo install vtracer   (needs the Rust toolchain in the image)
 
 WORKDIR /app
 

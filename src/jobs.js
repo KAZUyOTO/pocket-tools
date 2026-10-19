@@ -21,7 +21,7 @@ export function jobDir(id) {
  * the caller writes the input file first, then calls enqueue(). This ordering
  * guarantees a worker never starts before the upload is on disk.
  */
-export async function createJob({ originalName, from, to }) {
+export async function createJob({ originalName, from, to, sourceUrl }) {
   const id = nanoid(12);
   const dir = jobDir(id);
   await fsp.mkdir(dir, { recursive: true });
@@ -29,11 +29,12 @@ export async function createJob({ originalName, from, to }) {
   return {
     id,
     dir,
-    inputPath: path.join(dir, `input.${from}`),
+    inputPath: path.join(dir, `input.${from}`), // unused for URL jobs
     outputName: `${base}.${to}`,
     from,
     to,
     originalName,
+    sourceUrl: sourceUrl || null,
   };
 }
 
@@ -48,6 +49,7 @@ export async function enqueue(job) {
       outputName: job.outputName,
       dir: job.dir,
       inputPath: job.inputPath,
+      sourceUrl: job.sourceUrl || null,
     },
     { jobId: job.id },
   );

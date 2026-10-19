@@ -52,6 +52,11 @@ async function init() {
   $('reset').addEventListener('click', resetAll);
   toSelect.addEventListener('change', () => (goBtn.disabled = !toSelect.value));
   goBtn.addEventListener('click', convert);
+
+  $('urlgo').addEventListener('click', convertUrl);
+  $('url').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') convertUrl();
+  });
 }
 
 function pick(file) {
@@ -95,10 +100,33 @@ function resetAll() {
   drop.hidden = false;
 }
 
+function setStatusOn(el, cls, html) {
+  el.hidden = false;
+  el.className = 'status' + (cls ? ' ' + cls : '');
+  el.innerHTML = html;
+}
 function setStatus(cls, html) {
-  statusEl.hidden = false;
-  statusEl.className = 'status' + (cls ? ' ' + cls : '');
-  statusEl.innerHTML = html;
+  setStatusOn(statusEl, cls, html);
+}
+
+async function convertUrl() {
+  const url = $('url').value.trim();
+  const el = $('urlstatus');
+  if (!/^https?:\/\//i.test(url)) return setStatusOn(el, 'error', '✕ Enter a URL starting with http:// or https://');
+  const to = $('urlto').value;
+  $('urlgo').disabled = true;
+  setStatusOn(el, '', `Rendering…<div class="bar"><i></i></div>`);
+  let job;
+  try {
+    const res = await fetch(`/api/convert?to=${to}&url=${encodeURIComponent(url)}`, { method: 'POST' });
+    job = await res.json();
+    if (!res.ok) throw new Error(job.error || 'Failed');
+  } catch (err) {
+    $('urlgo').disabled = false;
+    return setStatusOn(el, 'error', `✕ ${err.message}`);
+  }
+  poll(job.id, el);
+  $('urlgo').disabled = false;
 }
 
 async function convert() {
@@ -126,22 +154,19 @@ async function convert() {
   poll(job.id);
 }
 
-async function poll(id) {
+async function poll(id, el = statusEl) {
   try {
     const res = await fetch(`/api/jobs/${id}`);
     const job = await res.json();
     if (job.status === 'done') {
-      setStatus(
-        'done',
-        `✓ Done. <a class="dl" href="/api/jobs/${id}/download">Download ${job.outputName}</a>`,
-      );
+      setStatusOn(el, 'done', `✓ Done. <a class="dl" href="/api/jobs/${id}/download">Download ${job.outputName}</a>`);
       return;
     }
     if (job.status === 'error') {
-      return setStatus('error', `✕ ${job.error}`);
+      return setStatusOn(el, 'error', `✕ ${job.error}`);
     }
-    setTimeout(() => poll(id), 800);
+    setTimeout(() => poll(id, el), 800);
   } catch {
-    setStatus('error', '✕ Lost connection to the server');
+    setStatusOn(el, 'error', '✕ Lost connection to the server');
   }
 }

@@ -25,7 +25,7 @@ npm start                 # the API
 # open http://localhost:3000
 ```
 
-Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge p7zip-full libvips-tools`.
+Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge tesseract-ocr wkhtmltopdf potrace p7zip-full libvips-tools` (plus `cargo install vtracer` for colour raster→svg).
 
 ## What it converts
 
@@ -44,6 +44,9 @@ Eleven engines across every CloudConvert category. With one-hop **chaining** (be
 | 3D meshes | Assimp | obj, stl, ply, gltf, glb, fbx, dae, 3ds |
 | Archives | 7-Zip / tar | zip, 7z, tar, gz, tgz (repack); extracts rar |
 | Fonts | FontForge | ttf, otf, woff, woff2 |
+| OCR | Tesseract | scanned image → txt (png, jpg, tiff, bmp) |
+| Web pages | wkhtmltopdf | a live URL or local html → pdf, png, jpg |
+| Vectorize | vtracer / potrace | png, jpg, bmp, gif → svg (raster → vector) |
 
 The live list is always at `GET /api/formats` and drives the UI dropdown — only engines whose binary is installed appear.
 
@@ -61,13 +64,23 @@ GET  /api/jobs/:id/download  # the converted file, once done
 GET  /api/health             # liveness + queue stats
 ```
 
-Example:
+Example (file):
 
 ```bash
 ID=$(curl -s -F "file=@report.docx" "localhost:3000/api/convert?to=pdf" | jq -r .id)
 # poll until done, then:
 curl -s "localhost:3000/api/jobs/$ID/download" -o report.pdf
 ```
+
+Example (web page → PDF, no file):
+
+```bash
+curl -s -X POST "localhost:3000/api/convert?to=pdf&url=https://example.com"
+```
+
+> **Note on URL rendering:** the server fetches whatever URL it's given. On a
+> public deployment that's an SSRF surface — put it behind auth or an allowlist,
+> or disable the URL path, before exposing it to the internet.
 
 ## How it works
 
@@ -101,7 +114,9 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 
 - ~~**Queue:** Redis + BullMQ, multi-process, survives restarts.~~ ✅ done (Phase 2)
 - ~~**Engines:** Calibre, Inkscape, Ghostscript, Poppler, Assimp, 7-Zip, FontForge + one-hop chaining.~~ ✅ done (Phase 3)
-- **Engines, more:** headless Chrome (url → pdf), CAD (dxf), RAW photo (LibRaw), subtitles.
+- ~~**OCR** (image → text), **URL/HTML → PDF/PNG** (wkhtmltopdf), **raster → SVG** (vtracer/potrace).~~ ✅ done (Phase 4)
+- **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), PDF → editable docx, subtitles.
+- **Operations:** OCR scanned pdf → searchable pdf, compress/optimize, merge.
 - **Fidelity:** bundled fonts, LibreOffice tuning, GPU transcode for video.
 - **Batch jobs & webhooks**, matching the import → convert → export task-chain model.
 
