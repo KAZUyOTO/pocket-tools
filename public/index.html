@@ -1,241 +1,354 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f3efe1"><meta name="description" content="Everyday tools to convert images, documents, PDF, audio, video, ebooks and more."><title>Pocket Tools — A little toolkit. A lot less busywork.</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><style>
-/* Pocket Tools — neo-brutalist. Thick black outlines, hard offset shadows,
-   flat bright blocks, heavy type. */
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0e2a1b"><meta name="description" content="Pocket Tools: a free, open-source file converter. Images, documents, PDF, audio, video, ebooks, fonts, 3D and archives."><title>Pocket Tools — Run system</title><link rel="icon" href="/favicon.svg"><link rel="preload" href="/fonts/letter-gothic.ttf" as="font" type="font/ttf" crossorigin><style>
+/* Pocket Tools — system log. Dotted paper sheet on a dark green frame,
+   blue Letter Gothic, cyan signal highlights, dashed rules, pixel glyphs. */
+@font-face{font-family:"Letter Gothic";src:url("/fonts/letter-gothic.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
 :root{
- color-scheme:light;
- --bg:#f3efe1;--panel:#fffdf5;--ink:#141414;--muted:#5c5a52;--bd:#141414;
- --yellow:#ffd21f;--pink:#ff4d8d;--green:#19c278;--purple:#7c5cff;--lime:#c7ef2e;--sky:#3fb9ff;--coral:#ff6a42;--err:#e23c24;
- --sh:6px 6px 0 var(--bd);--sh-sm:3px 3px 0 var(--bd);--sh-lg:9px 9px 0 var(--bd);
- --font:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif
+ --frame:#0e2a1b;--paper:#eceee8;--paper-2:#e3e6e0;--dot:rgba(35,56,200,.11);
+ --blue:#2338c8;--blue-2:#4256d8;--ink:#1d2030;--mute:#5f6b9e;--px:#a8b5df;
+ --cyan:#3fcbe6;--cyan-ink:#0d3b8c;--green:#55bd66;--red:#c8323c;
+ --mono:"Letter Gothic","Courier New",ui-monospace,monospace;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:20px}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font);font-weight:500;-webkit-font-smoothing:antialiased}
-button,input,select{font:inherit}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--frame);color:var(--ink);font:16px/1.55 var(--mono);letter-spacing:0;padding:40px 24px;-webkit-text-stroke:.35px currentColor;-webkit-font-smoothing:antialiased}
 [hidden]{display:none!important}
-a{color:inherit;text-decoration:none}
-button{cursor:pointer;color:inherit;background:none;border:0}
-button:disabled{cursor:not-allowed;opacity:.5}
-img,svg{display:block}
-h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.03em;line-height:1.02}
-p{margin:0;color:var(--muted)}
-::selection{background:var(--yellow);color:var(--ink)}
-input{caret-color:var(--ink)}
-input::placeholder{color:#8a877d}
-:focus-visible{outline:3px solid var(--purple);outline-offset:3px}
-::-webkit-scrollbar{width:12px;height:10px}
-::-webkit-scrollbar-thumb{background:var(--ink);border:3px solid var(--bg)}
-.wrap{width:min(1120px,calc(100% - 64px));margin-inline:auto}
-.skip{position:absolute;left:16px;top:-80px;background:var(--yellow);border:3px solid var(--bd);padding:10px 14px;font-weight:800;z-index:20}
-.skip:focus{top:14px}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+::selection{background:var(--cyan);color:var(--cyan-ink)}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.skip{position:absolute;left:-9999px;top:8px;background:var(--cyan);color:var(--cyan-ink);padding:6px 10px;z-index:9}
+.skip:focus{left:8px}
+
+/* the sheet */
+.sheet{position:relative;max-width:1180px;margin:0 auto;background-color:var(--paper);background-image:radial-gradient(var(--dot) 1px,transparent 1.3px);background-size:11px 11px;padding:56px 64px 40px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:48px}
+.side{position:sticky;top:24px;align-self:start;display:flex;flex-direction:column;align-items:center;gap:30px}
+
+/* type */
+.blue{color:var(--blue)}
+.up{text-transform:uppercase}
+.prompt{color:var(--ink);text-transform:uppercase;margin:0;font-size:15px}
+.prompt::before{content:"> ";}
+.prompt.small{font-size:13px;letter-spacing:.02em}
+.tag{display:inline-block;background:var(--cyan);color:var(--cyan-ink);padding:0 5px;line-height:1.35}
+.rule{border:0;border-top:2px dashed var(--blue);margin:14px 0;opacity:.9}
+.rule.cyan{border-top-color:var(--cyan)}
+.rule.green{border-top-color:var(--green);border-top-width:1.5px}
+.boxnum{display:inline-grid;place-items:center;width:17px;height:17px;border:1.5px solid var(--blue);color:var(--blue);font-size:11px;line-height:1}
+.boxnum.cyan{border-color:var(--cyan);color:var(--cyan)}
+.marker{display:flex;justify-content:space-between;align-items:center;margin:56px 0 18px}
+.px{display:inline-block;vertical-align:middle;opacity:.95;pointer-events:none}
+.px svg{display:block}
+.float-px{position:absolute;pointer-events:none}
+
+/* boot lines */
+.boot .prompt{opacity:0;animation:boot .01s steps(1) forwards}
+.boot .prompt:nth-child(1){animation-delay:.05s}.boot .prompt:nth-child(2){animation-delay:.35s}.boot .prompt:nth-child(3){animation-delay:.65s}.boot .prompt:nth-child(4){animation-delay:.95s}
+@keyframes boot{to{opacity:1}}
+.cursor{display:inline-block;width:.6em;height:1em;background:var(--blue);vertical-align:-2px;margin-left:4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* index box (nav) */
+.index{border:1.5px solid var(--green);padding:12px 18px;text-align:center;display:flex;flex-direction:column;gap:2px;min-width:132px;background:rgba(236,238,232,.85)}
+.index a,.index span{color:var(--blue);text-decoration:none;text-transform:uppercase;font-size:14px;line-height:1.45}
+.index a:hover{background:var(--cyan);color:var(--cyan-ink)}
+.emblem{width:110px;height:auto;color:var(--blue)}
+.emblem *{vector-effect:non-scaling-stroke}
+
+/* output log */
+.log{display:grid;grid-template-columns:150px minmax(0,1fr);row-gap:3px;column-gap:16px;margin:4px 0;font-size:16px}
+.log dt{text-transform:uppercase;color:var(--ink)}
+.log dd{margin:0;color:var(--blue);text-transform:uppercase;overflow-wrap:anywhere}
+.log dd.ink{color:var(--ink)}
+.title-line{-webkit-text-stroke:.6px currentColor;font-size:clamp(30px,4.2vw,48px);line-height:1.15;margin:18px 0 6px;color:var(--blue);text-transform:uppercase;letter-spacing:-.01em;font-weight:400}
+.title-line .q{color:var(--ink)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin:26px 0 4px}
 
 /* buttons */
-.button{display:inline-flex;align-items:center;justify-content:center;gap:14px;padding:13px 20px;min-height:50px;border:3px solid var(--bd);background:var(--panel);font-weight:800;font-size:14px;box-shadow:var(--sh);transition:transform .07s,box-shadow .07s}
-.button:hover:not(:disabled){transform:translate(3px,3px);box-shadow:var(--sh-sm)}
-.button:active:not(:disabled){transform:translate(6px,6px);box-shadow:0 0 0 var(--bd)}
-.primary{background:var(--yellow)}
-.secondary{background:var(--panel)}
-.download{background:var(--green)}
-.text-link{display:inline-flex;gap:10px;align-items:center;font-weight:800;border-bottom:3px solid var(--bd);padding-bottom:2px}
-.text-link:hover{color:var(--ink);border-color:var(--pink)}
-
-/* header */
-.header{display:flex;align-items:center;gap:40px;height:78px;padding:0 32px;background:var(--panel);border-bottom:4px solid var(--bd)}
-.brand{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:900;letter-spacing:-.04em}
-.brand svg{width:34px;height:34px;padding:4px;background:var(--yellow);border:3px solid var(--bd);fill:var(--ink);stroke:var(--ink);stroke-width:2}
-.brand-dot{color:var(--pink);margin-left:-6px}
-.header nav{display:flex;gap:24px;font-size:13px;font-weight:700}
-.header nav a{padding:4px 0;border-bottom:3px solid transparent}
-.header nav a:hover{border-color:var(--pink)}
-.github{margin-left:auto;font-size:13px;font-weight:800;border:3px solid var(--bd);background:var(--lime);padding:11px 16px;box-shadow:var(--sh-sm);transition:transform .07s,box-shadow .07s}
-.github:hover{transform:translate(3px,3px);box-shadow:0 0 0 var(--bd)}
-.github span{margin-left:12px}
-.menu{display:none;font-weight:800;border:3px solid var(--bd);padding:8px 12px;background:var(--panel)}
-
-/* hero */
-.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding-block:64px 58px}
-.hero h1{font-size:clamp(46px,6.2vw,78px);text-transform:none}
-.hero h1 span{display:inline-block;background:var(--pink);color:#fff;border:3px solid var(--bd);padding:0 .12em;box-shadow:var(--sh-sm);margin-top:.12em;transform:rotate(-1deg)}
-.hero-copy>p,.hero-note{color:var(--ink);font-weight:600}
-.hero-actions{display:flex;gap:18px;align-items:center;margin:30px 0 16px;flex-wrap:wrap}
-.hero-note{font-size:12px;font-weight:700;color:var(--muted)}
-
-/* hero illustration */
-.file-flow{background:var(--panel);border:4px solid var(--bd);box-shadow:var(--sh-lg)}
-.flow-top{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:3px solid var(--bd);font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--sky)}
-.flow-light{width:9px;height:9px;background:var(--green);border:2px solid var(--bd);border-radius:50%}
-.flow-canvas{position:relative;height:290px;overflow:hidden}
-.format-doc{position:absolute;width:104px;height:128px;border:3px solid var(--bd);box-shadow:var(--sh-sm);padding:22px 15px;z-index:2}
-.source-doc{left:7%;top:42px;transform:rotate(-6deg);background:var(--coral)}
-.output-doc{right:7%;top:104px;transform:rotate(6deg);background:var(--green)}
-.format-label{font-size:18px;font-weight:900}
-.format-doc i{display:block;height:3px;background:var(--bd);opacity:.55;margin-top:10px}
-.format-doc i:last-of-type{width:62%}
-.doc-fold{position:absolute;right:0;top:0;width:18px;height:18px;border-left:3px solid var(--bd);border-bottom:3px solid var(--bd)}
-.doc-caption{position:absolute;bottom:-26px;left:-4px;white-space:nowrap;font-size:10px;font-weight:700;color:var(--muted)}
-.pocket-node{position:absolute;left:calc(50% - 27px);top:108px;width:54px;height:54px;background:var(--yellow);border:3px solid var(--bd);box-shadow:var(--sh-sm);display:grid;place-items:center;z-index:3}
-.pocket-node svg{width:30px;fill:none;stroke:var(--ink);stroke-width:2.4}
-.flow-wire{position:absolute;border:3px solid var(--bd);width:24%;height:60px;z-index:1}
-.wire-one{left:26%;top:80px;border-left:0;border-bottom:0}
-.wire-two{right:26%;top:140px;border-right:0;border-top:0}
-.flow-tags{position:absolute;left:16px;bottom:14px;display:flex;gap:8px;font-size:9px;font-weight:800}
-.flow-tags span{border:2.5px solid var(--bd);padding:6px 9px;background:var(--panel)}
-.flow-tags b{color:var(--pink)}
-.flow-bottom{display:flex;justify-content:space-between;padding:14px 18px;border-top:3px solid var(--bd);font-size:12px;font-weight:700;background:var(--yellow)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--blue);background:transparent;color:var(--blue);padding:9px 16px;text-transform:uppercase;text-decoration:none;cursor:pointer;font-size:15px;line-height:1.2}
+.btn:hover{background:var(--blue);color:var(--paper)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:var(--cyan-ink)}
+.btn.primary:hover{background:var(--blue);border-color:var(--blue);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:not-allowed;background:transparent;color:var(--blue);border-color:var(--blue)}
+.link{background:none;border:0;padding:0;color:var(--blue);text-transform:uppercase;cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:4px;font-size:14px}
+.link:hover{background:var(--cyan);color:var(--cyan-ink);text-decoration:none}
+.text-link{background:none;border:0;padding:0;color:var(--blue);text-transform:uppercase;cursor:pointer;font-size:13px;text-decoration:underline dashed;text-underline-offset:4px}
+.text-link:hover{background:var(--cyan);color:var(--cyan-ink);text-decoration:none}
+#start-over{align-self:flex-start}
 
 /* catalog */
-.catalog{padding-block:36px 48px}
-.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-h2{font-size:clamp(28px,3.4vw,40px)}
-.section-head p{margin-top:8px;font-weight:600;color:var(--muted)}
-.search{display:flex;align-items:center;gap:10px;padding:11px 14px;min-width:280px;border:3px solid var(--bd);background:var(--panel);box-shadow:var(--sh-sm)}
-.search svg{width:19px;fill:none;stroke:var(--ink);stroke-width:2}
-.search input{flex:1;min-width:0;background:none;border:0;outline:none;font-weight:600;font-size:14px}
-.search kbd{font-family:inherit;font-weight:800;font-size:11px;border:2px solid var(--bd);padding:1px 6px;background:var(--lime)}
-.filters{display:flex;gap:10px;overflow-x:auto;margin:26px 0 16px;padding-bottom:6px}
-.filter{white-space:nowrap;font-weight:800;font-size:12px;border:3px solid var(--bd);padding:9px 15px;background:var(--panel);box-shadow:var(--sh-sm);transition:transform .07s,box-shadow .07s}
-.filter:hover{transform:translate(2px,2px);box-shadow:0 0 0 var(--bd)}
-.filter.active{background:var(--yellow)}
-.catalog-status{font-size:12px;font-weight:700;color:var(--muted);min-height:18px;margin:0 0 18px}
-.catalog-status.error{color:var(--err)}
-.catalog-status button{font-weight:800;border-bottom:3px solid var(--bd)}
-.tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-.tool{position:relative;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:172px;padding:22px;background:var(--panel);border:3px solid var(--bd);box-shadow:var(--sh);transition:transform .08s,box-shadow .08s}
-.tool:hover{transform:translate(4px,4px);box-shadow:var(--sh-sm)}
-.tool::before{content:"";position:absolute;left:18px;top:-13px;width:52px;height:13px;border:3px solid var(--bd);border-bottom:0;background:var(--yellow)}
-.tool:nth-child(6n+1)::before{background:var(--pink)}
-.tool:nth-child(6n+2)::before{background:var(--green)}
-.tool:nth-child(6n+3)::before{background:var(--purple)}
-.tool:nth-child(6n+4)::before{background:var(--sky)}
-.tool:nth-child(6n+5)::before{background:var(--lime)}
-.tool:nth-child(6n+6)::before{background:var(--coral)}
-.tool-icon{width:46px;height:46px;display:grid;place-items:center;border:3px solid var(--bd);background:var(--yellow)}
-.tool:nth-child(6n+1) .tool-icon{background:var(--pink)}
-.tool:nth-child(6n+2) .tool-icon{background:var(--green)}
-.tool:nth-child(6n+3) .tool-icon{background:var(--purple)}
-.tool:nth-child(6n+4) .tool-icon{background:var(--sky)}
-.tool:nth-child(6n+5) .tool-icon{background:var(--lime)}
-.tool:nth-child(6n+6) .tool-icon{background:var(--coral)}
-.tool-icon svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.tool-name{font-size:16px;font-weight:900;line-height:1.2;padding-right:14px}
-.tool-desc{font-size:12px;font-weight:600;color:var(--muted);line-height:1.5}
-.tool-arrow{position:absolute;right:18px;top:22px;font-size:17px;font-weight:900}
-.tool-tag{display:inline-block;font-size:9px;font-weight:900;letter-spacing:.04em;color:#fff;background:var(--pink);border:2px solid var(--bd);padding:1px 6px;margin-left:7px;vertical-align:middle}
-.catalog-foot{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:26px;font-size:12px;font-weight:700;color:var(--muted);flex-wrap:wrap}
-.empty{text-align:center;padding:48px;border:3px dashed var(--bd);background:var(--panel)}
-.empty h3{font-size:22px;margin-bottom:8px}
+.section-title{font-size:15px;text-transform:uppercase;margin:0;color:var(--ink);font-weight:400}
+.section-title .blue{color:var(--cyan-ink)}
+.count{color:var(--cyan)}
+.query{display:flex;align-items:center;gap:10px;margin:16px 0 10px;border-bottom:1.5px dashed var(--blue);padding-bottom:6px;max-width:520px}
+.query span{text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.query input{flex:1;min-width:0;border:0;background:transparent;color:var(--blue);outline:none;text-transform:uppercase;padding:2px 0}
+.query input::placeholder{color:var(--mute)}
+.query kbd{font:inherit;font-size:11px;border:1px solid var(--mute);color:var(--mute);padding:0 5px}
+.filters{display:flex;flex-wrap:wrap;gap:4px 22px;margin:6px 0 4px;font-size:15px}
+.filter{position:relative;background:none;border:0;padding:1px 4px;color:var(--blue);text-transform:uppercase;cursor:pointer}
+.filter::after{content:"/";position:absolute;right:-16px;top:1px;color:var(--blue);pointer-events:none}
+.filter:last-child::after{content:""}
+.filter:hover,.filter.active{background:var(--cyan);color:var(--cyan-ink)}
+.catalog-status{font-size:13px;color:var(--mute);text-transform:uppercase;margin:10px 0 0}
+.catalog-status.error{color:var(--red)}
+.catalog-status button{margin-left:8px;background:none;border:1px solid currentColor;color:inherit;cursor:pointer;text-transform:uppercase;font-size:12px}
+.modules{width:100%;margin-top:6px}
+.mod-head,.tool{display:grid;grid-template-columns:minmax(0,2.4fr) .7fr .7fr .9fr .5fr;gap:12px;align-items:baseline;padding:0 10px}
+.mod-head{font-size:12px;text-transform:uppercase;color:var(--ink);padding-top:10px;padding-bottom:8px;border-top:1.5px dashed var(--cyan);border-bottom:1.5px dashed var(--green)}
+.tool-grid{display:block;border-bottom:1.5px dashed var(--cyan)}
+.tool{width:100%;text-align:left;background:none;border:0;border-bottom:1px dotted rgba(35,56,200,.18);padding-top:9px;padding-bottom:9px;cursor:pointer;color:var(--ink);text-transform:uppercase;font-size:14px}
+.tool:last-child{border-bottom:0}
+.tool:hover,.tool:focus-visible{background:var(--cyan);color:var(--cyan-ink);outline:none}
+.tool:hover .tool-desc,.tool:focus-visible .tool-desc,.tool:hover .st,.tool:focus-visible .st{color:var(--cyan-ink)}
+.tool-name{color:inherit;display:block}
+.tool-desc{display:block;text-transform:none;color:var(--mute);font-size:13.5px;margin-top:2px}
+.st{color:var(--blue)}
+.st.idle{color:var(--mute)}
+.st.hybrid{color:var(--green)}
+.empty{padding:22px 10px;text-transform:uppercase}
+.empty h3{font-weight:400;font-size:15px;margin:0 0 4px;color:var(--red)}
+.empty p{margin:0 0 12px;color:var(--mute)}
+.catalog-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:14px 0 0;font-size:12px;text-transform:uppercase;color:var(--ink)}
 
 /* workspace */
-.workspace,.web-section{padding-block:40px 60px;scroll-margin-top:20px}
-.workspace-heading{margin:18px 0 26px}
-.workspace-heading p{margin-top:8px;font-weight:600}
-.work-grid{display:grid;grid-template-columns:1.2fr 1fr;border:4px solid var(--bd);box-shadow:var(--sh-lg);background:var(--panel)}
-.upload-area{padding:26px;min-width:0}
-.output-area{padding:26px;border-left:4px solid var(--bd);display:flex;flex-direction:column;gap:14px}
-.output-area>label{font-weight:900;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
-.drop{width:100%;min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:3px dashed var(--bd);background:#fff}
-.drop:hover,.drop.drag{background:var(--yellow)}
-.drop svg{width:42px;fill:none;stroke:var(--ink);stroke-width:2;margin-bottom:12px}
-.drop strong{font-size:19px;font-weight:900}
-.drop span{font-size:13px;font-weight:600;color:var(--muted)}
-.drop small{font-size:11px;font-weight:700;color:var(--muted);margin-top:8px}
-.input-help{font-size:11px;font-weight:600;line-height:1.6;color:var(--muted);margin-top:14px}
-select,.option-fields input,.web-fields input,.web-fields select{width:100%;min-height:48px;padding:12px;border:3px solid var(--bd);background:#fff;font-weight:600;font-size:14px}
-.output-area fieldset{border:3px solid var(--bd);margin:0;padding:16px;background:#fff}
-.output-area legend{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;padding:0 6px}
-.option-fields{display:flex;gap:12px;margin-bottom:12px}
-.option-fields label{width:50%;font-size:11px;font-weight:700}
-.option-fields input{margin-top:6px}
-.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;font-weight:600;margin:9px 0;line-height:1.5}
-.check input{width:20px;height:20px;accent-color:var(--pink);border:3px solid var(--bd);margin-top:1px;flex:none}
-.notice{font-size:12px;font-weight:600;border:3px solid var(--bd);background:var(--lime);padding:13px}
-.job-status{font-size:13px;font-weight:700;overflow-wrap:anywhere}
-.job-status.error{color:var(--err)}
-.job-status.success{color:#0a8a4f}
-.job-status.busy:before{content:'';display:inline-block;width:12px;height:12px;border:3px solid var(--bd);border-top-color:var(--pink);border-radius:50%;margin-right:9px;animation:spin .9s linear infinite;vertical-align:-1px}
+.ws-title{font-size:clamp(22px,3vw,30px);font-weight:400;color:var(--blue);text-transform:uppercase;margin:16px 0 4px;outline:none}
+.ws-title::before{content:"> MODULE LOADED: ";color:var(--ink);font-size:15px;display:block;margin-bottom:4px}
+.ws-desc{margin:0 0 18px;color:var(--mute);font-size:14px}
+.work-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.pane-label{font-size:12px;text-transform:uppercase;color:var(--ink);margin:0 0 8px}
+.drop{width:100%;min-height:220px;border:2px dashed var(--blue);background:rgba(63,203,230,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--blue);text-transform:uppercase;padding:24px;text-align:center}
+.drop:hover,.drop.drag{background:var(--cyan);color:var(--cyan-ink);border-color:var(--cyan-ink)}
+.drop strong{font-weight:400;font-size:20px}
+.drop span,.drop small{font-size:12px;color:inherit;opacity:.85}
+.drop .plus{font-size:28px;line-height:1;border:1.5px solid currentColor;width:42px;height:42px;display:grid;place-items:center;margin-bottom:6px}
+.file-list{border:1.5px dashed var(--blue);padding:8px 12px;max-height:340px;overflow:auto;background:rgba(236,238,232,.7)}
+.file-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:6px 0;border-bottom:1px dotted rgba(35,56,200,.22)}
+.file-icon{font-size:11px;color:var(--cyan-ink);background:var(--cyan);padding:1px 5px;text-transform:uppercase}
+.file-meta strong{display:block;font-weight:400;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.file-meta span{font-size:11px;color:var(--mute);text-transform:uppercase}
+.file-remove{background:none;border:0;color:var(--blue);cursor:pointer;font-size:13px}
+.file-remove:hover{background:var(--cyan);color:var(--cyan-ink)}
+.add-more{margin-top:10px;display:inline-block}
+.input-help{font-size:12px;color:var(--mute);margin:10px 0 0}
+.output-area{display:flex;flex-direction:column;gap:12px}
+.output-area>label,.web-form label{font-size:12px;text-transform:uppercase;color:var(--ink)}
+select,input[type=number],input[type=url]{width:100%;border:1.5px solid var(--blue);background:var(--paper);color:var(--blue);padding:9px 10px;text-transform:uppercase;border-radius:0;outline:none}
+select:focus,input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan)}
+select:disabled{opacity:.5}
+fieldset{border:1.5px dashed var(--green);padding:10px 14px 12px;margin:0}
+legend{text-transform:uppercase;font-size:12px;padding:0 6px;color:var(--ink)}
+.option-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+.option-fields label{font-size:11px;text-transform:uppercase;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.check{display:flex;gap:9px;align-items:center;font-size:13px;text-transform:uppercase;color:var(--blue);cursor:pointer;margin-top:6px}
+.check input{appearance:none;width:15px;height:15px;border:1.5px solid var(--blue);margin:0;display:grid;place-items:center;cursor:pointer;background:var(--paper)}
+.check input:checked{background:var(--cyan);border-color:var(--cyan-ink)}
+.check input:checked::after{content:"x";color:var(--cyan-ink);font-size:12px;line-height:1}
+.notice{border:1.5px solid var(--cyan);padding:10px 12px;font-size:12px;color:var(--ink);text-transform:uppercase}
+.notice::before{content:"! SIGNAL: ";color:var(--blue)}
+.job-status{font-size:13px;text-transform:uppercase;color:var(--ink);padding:6px 0;border-top:1.5px dashed var(--blue)}
+.job-status::before{content:"> STATUS: ";color:var(--ink)}
+.job-status.busy{color:var(--blue)}
+.job-status.busy::after{content:"_";animation:blink 1s steps(1) infinite}
+.job-status.success{color:var(--cyan-ink)}
+.job-status.success::before{content:"> OUTPUT: "}
+.job-status.error{color:var(--red)}
+.job-status.error::before{content:"> ERROR: "}
+.results{display:flex;flex-direction:column;border:1.5px dashed var(--cyan);padding:6px 12px}
+.result-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;font-size:13px;padding:6px 0;border-bottom:1px dotted rgba(35,56,200,.22);align-items:baseline}
+.result-row:last-child{border-bottom:0}
+.result-name{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-name::before{content:"> ";color:var(--blue)}
+.result-state{text-transform:uppercase;color:var(--blue);font-size:12px}
+.result-row.busy .result-state::after{content:"_";animation:blink 1s steps(1) infinite}
+.result-state.error{color:var(--red);text-transform:none}
+.result-dl{color:var(--cyan-ink);background:var(--cyan);padding:1px 6px;text-decoration:none;text-transform:none;font-size:12px;display:inline-block;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+.result-dl:hover{background:var(--blue);color:var(--paper)}
+.download{align-self:flex-start}
+.web-fields{display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:10px;margin-top:6px}
+.web-form{margin-top:12px;max-width:760px}
 
-/* file list + results (batch) */
-.file-list{display:flex;flex-direction:column;gap:12px}
-.file-row{display:flex;align-items:center;gap:14px;padding:13px;border:3px solid var(--bd);background:#fff;box-shadow:var(--sh-sm)}
-.file-icon{display:grid;place-items:center;min-width:46px;height:46px;padding:0 8px;font-size:11px;font-weight:900;border:3px solid var(--bd);background:var(--sky);flex:none}
-.file-meta{min-width:0;flex:1}
-.file-meta strong{display:block;overflow-wrap:anywhere;font-size:13px;font-weight:800}
-.file-meta span{display:block;font-size:11px;font-weight:600;color:var(--muted)}
-.file-remove{font-size:22px;font-weight:900;padding:4px 8px}
-.add-more{margin-top:2px;font-weight:800;border-bottom:3px solid var(--bd);padding-bottom:2px}
-.results{display:flex;flex-direction:column;gap:10px}
-.result-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:3px solid var(--bd);background:#fff;font-size:12px;font-weight:700}
-.result-name{overflow-wrap:anywhere;min-width:0;flex:1}
-.result-state{white-space:nowrap;color:var(--muted);font-weight:700}
-.result-state.error{color:var(--err);white-space:normal}
-.result-dl{color:#0a8a4f;font-weight:900;border-bottom:3px solid var(--bd)}
-.result-row.busy .result-state:before{content:'';display:inline-block;width:10px;height:10px;border:3px solid var(--bd);border-top-color:var(--pink);border-radius:50%;margin-right:7px;animation:spin .9s linear infinite;vertical-align:-1px}
+/* procedure + query log */
+.proc{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:0;padding:0;border-top:1.5px dashed var(--cyan);border-bottom:1.5px dashed var(--cyan)}
+.proc li{list-style:none;padding:16px 18px 18px;border-right:1px dotted rgba(35,56,200,.3)}
+.proc li:last-child{border-right:0}
+.proc .fn{color:var(--blue);text-transform:uppercase;display:block;margin-bottom:6px}
+.proc .code{font-size:12px;color:var(--mute)}
+.proc p{margin:6px 0 0;font-size:13px;color:var(--ink)}
+.proc ol{margin:0;padding:0;display:contents}
+.faq details{border-bottom:1px dotted rgba(35,56,200,.3);padding:10px 0}
+.faq summary{cursor:pointer;color:var(--blue);text-transform:uppercase;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:"> Q: ";color:var(--ink)}
+.faq details[open] summary{background:var(--cyan);color:var(--cyan-ink);display:inline}
+.faq details p{margin:10px 0 2px 34px;font-size:13px;color:var(--ink);max-width:680px}
+.faq details p::before{content:"A: ";color:var(--blue)}
 
-/* web + how + questions + closing + footer */
-.web-section form>label{display:block;font-weight:900;text-transform:uppercase;font-size:12px;letter-spacing:.04em;margin-bottom:10px}
-.web-fields{display:flex;gap:12px}
-.web-fields input{flex:1;min-width:0}
-.web-fields select{width:110px}
-.web-fields button{white-space:nowrap}
-.how,.questions{display:grid;grid-template-columns:1fr 1fr;gap:56px;padding-block:56px;border-top:4px solid var(--bd)}
-.how>div>p{margin:18px 0 22px;font-weight:600;color:var(--ink)}
-.how ol{list-style:none;margin:0;padding:0}
-.how li{display:flex;gap:18px;padding:20px 0;border-bottom:3px solid var(--bd)}
-.how li:first-child{padding-top:0}
-.how li>span{font-weight:900;font-size:14px;background:var(--lime);border:3px solid var(--bd);width:38px;height:38px;display:grid;place-items:center;flex:none}
-.how h3{font-size:16px;margin-bottom:6px}
-.how li p{font-size:12px;font-weight:600;max-width:40ch}
-.questions h2{max-width:12ch}
-.questions details{border:3px solid var(--bd);background:var(--panel);box-shadow:var(--sh-sm);padding:16px 18px;margin-bottom:14px}
-.questions summary{cursor:pointer;font-size:14px;font-weight:800;list-style:none;display:flex;justify-content:space-between;gap:18px}
-.questions summary::-webkit-details-marker{display:none}
-.questions summary:after{content:'+';color:var(--pink);font-size:20px;font-weight:900;line-height:1}
-.questions details[open] summary:after{content:'−'}
-.questions details p{margin-top:12px;font-size:12px;font-weight:600}
-.closing{display:flex;align-items:center;justify-content:space-between;gap:28px;position:relative;overflow:hidden;margin-block:30px;padding:44px 40px;background:var(--purple);color:#fff;border:4px solid var(--bd);box-shadow:var(--sh-lg)}
-.closing h2{font-size:clamp(28px,3.6vw,40px);color:#fff;z-index:1}
-.closing .button{z-index:1}
-.closing>svg{position:absolute;right:16%;top:-14px;width:210px;fill:none;stroke:rgba(255,255,255,.35);stroke-width:3;transform:rotate(-10deg)}
-.footer{display:flex;align-items:center;gap:26px;padding-block:34px;border-top:4px solid var(--bd);flex-wrap:wrap}
-.footer .brand{font-size:19px}
-.footer p{font-size:12px;font-weight:600}
-.footer>a:last-child{margin-left:auto;font-weight:800;border-bottom:3px solid var(--bd)}
+/* footer */
+.foot{display:grid;grid-template-columns:1fr auto;align-items:end;gap:20px;margin-top:64px;padding-top:14px;border-top:1.5px dashed var(--cyan)}
+.state{display:grid;grid-template-columns:150px auto;column-gap:16px;font-size:13px;text-transform:uppercase}
+.state dt{color:var(--ink)}.state dd{margin:0;color:var(--blue)}
+.state dd.online{color:var(--cyan-ink);background:var(--cyan);padding:0 5px;justify-self:start}
+.sig{display:flex;align-items:center;gap:14px;color:var(--blue);text-decoration:none;font-size:13px;text-transform:uppercase}
+.sig:hover span{background:var(--cyan);color:var(--cyan-ink)}
+.sig svg{width:34px;height:34px}
 
-@keyframes spin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before{animation:none!important;transition:none!important}}
-
-/* responsive */
-@media(max-width:1000px){.wrap{width:calc(100% - 44px)}.hero{gap:30px}.how,.questions{gap:34px}}
-@media(max-width:820px){
- .header{height:auto;flex-wrap:wrap;gap:16px;padding:16px 20px;position:relative}
- .header nav{display:none;order:4;width:100%;flex-direction:column;gap:14px}
- .header nav.open{display:flex}
- .menu{display:block;margin-left:auto}
- .github{margin-left:0}
- .hero{grid-template-columns:1fr;padding-block:40px 30px}
+@media (max-width:900px){
+ body{padding:16px 10px}
+ .sheet{padding:30px 20px 26px}
+ .layout{grid-template-columns:1fr;gap:20px}
+ .side{position:static;flex-direction:row;justify-content:space-between;align-items:flex-start;order:-1}
+ .index{flex-direction:row;flex-wrap:wrap;gap:4px 14px;text-align:left;min-width:0;padding:8px 12px}
+ .emblem{width:72px}
+ .log{grid-template-columns:110px minmax(0,1fr);font-size:13px}
  .work-grid{grid-template-columns:1fr}
- .output-area{border-left:0;border-top:4px solid var(--bd)}
- .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
- .how,.questions{grid-template-columns:1fr;padding-block:40px}
- .closing{flex-direction:column;align-items:flex-start}
- .section-head{align-items:flex-start;flex-direction:column}.search{width:100%}
- .option-fields input,.search input{font-size:16px}
+ .mod-head{display:none}
+ .tool{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}
+ .tool .c-in,.tool .c-out,.tool .c-idx{display:none}
+ .proc{grid-template-columns:1fr}
+ .proc li{border-right:0;border-bottom:1px dotted rgba(35,56,200,.3)}
+ .web-fields{grid-template-columns:1fr}
+ .foot{grid-template-columns:1fr}
+ .state{grid-template-columns:110px auto}
+ .float-px{display:none}
 }
-@media(max-width:480px){.tool-grid{grid-template-columns:1fr}.hero h1{font-size:44px}.web-fields{flex-wrap:wrap}.web-fields input{flex-basis:100%}}
-
-</style><script>window.POCKET_API = ""; /* Claude: set the conversion API origin here, or serve this page from the API. */</script></head>
+</style><script>window.POCKET_API = ""; /* Set the conversion API origin here, or serve this page from the API. */</script></head>
 <body><a class="skip" href="#catalog">Skip to tools</a>
-<header class="header"><a href="#" class="brand" aria-label="Pocket Tools home"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 4h20v11c0 6-5 9-10 9S4 21 4 15Z"/><path d="m9 11 5 5 5-5"/></svg>pocket tools<span class="brand-dot">.</span></a><nav aria-label="Main navigation" id="navigation"><a href="#catalog">All tools</a><a href="#how">How it works</a><a href="#questions">Good to know</a></nav><a class="github" href="#catalog">Explore tools <span aria-hidden="true">↗</span></a><button id="menu" class="menu" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navigation">Menu</button></header>
-<main><section class="hero wrap" id="home"><div class="hero-copy"><h1>Pocket tools for your<br><span>everyday file needs.</span></h1><div class="hero-actions"><button class="button primary" id="start">Choose a file <span aria-hidden="true">↗</span></button><a class="text-link" href="#catalog">Find your tool <span aria-hidden="true">↓</span></a></div><p class="hero-note">No account needed. Just choose, convert, and carry on.</p></div>
-<div class="file-flow" aria-label="Convert your files from one format to another"><div class="flow-top"><span class="flow-light"></span>A CHANGE OF FORMAT. A WORLD OF POSSIBILITIES.</div><div class="flow-canvas" aria-hidden="true"><div class="format-doc source-doc"><span class="doc-fold"></span><span class="format-label">DOCX</span><i></i><i></i><i></i><div class="doc-caption">the first draft</div></div><div class="flow-wire wire-one"></div><div class="pocket-node"><svg viewBox="0 0 28 28"><path d="M4 4h20v11c0 6-5 9-10 9S4 21 4 15Z"/><path d="m9 11 5 5 5-5"/></svg></div><div class="flow-wire wire-two"></div><div class="format-doc output-doc"><span class="doc-fold"></span><span class="format-label">PDF</span><i></i><i></i><i></i><div class="doc-caption">ready to send</div></div><div class="flow-tags"><span>HEIC <b>→</b> JPG</span><span>MP4 <b>→</b> MP3</span><span>PDF <b>→</b> DOCX</span></div></div><div class="flow-bottom"><span>Your file. A fresh start.</span><span aria-hidden="true">↗</span></div></div></section>
+<div class="sheet">
+<span class="float-px" style="right:30%;top:118px" data-px="7" data-w="18" data-h="6"></span>
+<span class="float-px" style="left:44%;top:640px" data-px="12" data-w="14" data-h="5"></span>
+<div class="layout">
+<main>
+<section id="home" aria-labelledby="hero-title">
+ <div class="boot">
+  <p class="prompt">Run system: <span class="blue">[pocket_tools]</span> <span class="px" data-px="1" data-w="16" data-h="6"></span></p>
+  <p class="prompt small">Initializing modules...</p>
+  <p class="prompt small">Compiling format index...</p>
+  <p class="prompt">Signal detected: <span class="tag" id="signal">[CONVERT.ANY]</span></p>
+ </div>
+ <div class="marker"><span class="boxnum">1</span></div>
+ <hr class="rule">
+ <p class="prompt" style="margin:0">Output_log : <span class="blue">pocket_tools_?</span></p>
+ <hr class="rule">
+ <h1 class="title-line" id="hero-title">Every file.<br><span class="q">Every format.</span><span class="cursor" aria-hidden="true"></span></h1>
+ <dl class="log">
+  <dt>Function</dt><dd>Convert files -&gt; any format</dd>
+  <dt>Capacity</dt><dd id="capacity">Checking server...</dd>
+  <dt>Engines</dt><dd class="ink">ffmpeg / libreoffice / imagemagick / pandoc / tesseract / +12</dd>
+  <dt>Price</dt><dd>0.00</dd>
+  <dt>Account</dt><dd>Not required</dd>
+  <dt>Watermark</dt><dd>None</dd>
+  <dt>License</dt><dd>MIT / open source</dd>
+  <dt>Source</dt><dd><a href="https://github.com/KAZUyOTO/pocket-tools" target="_blank" rel="noopener">github.com/KAZUyOTO/pocket-tools</a></dd>
+ </dl>
+ <hr class="rule">
+ <p class="prompt small">Data integrity: verified.</p>
+ <p class="prompt small">Proceed to modules. <span class="px" data-px="3" data-w="12" data-h="5"></span></p>
+ <div class="hero-cta"><button class="btn primary" id="start">[ &gt; Choose files ]</button><a class="link" href="#catalog">Browse modules</a></div>
+</section>
 
-<section class="catalog wrap" id="catalog" aria-labelledby="catalog-title"><div class="section-head"><div><h2 id="catalog-title">A little toolkit. A lot less busywork.</h2><p>Find the right one and get on with your day.</p></div><label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="search" type="search" placeholder="Find a tool…" aria-label="Search tools"><kbd>/</kbd></label></div><div class="filters" id="filters" role="group" aria-label="Filter tools by category"></div><p id="catalog-status" class="catalog-status" role="status">Checking available tools…</p><div id="catalogBody" class="tool-grid"></div><div class="empty" id="empty" hidden><h3>No tools found.</h3><p>Try a format like “PDF” or choose another category.</p><button id="clear-search" class="button secondary">Clear search</button></div><p class="catalog-foot">One file at a time. Plenty of possibilities.<button id="show-all" class="text-link">Explore all tools <span aria-hidden="true">↗</span></button></p></section>
-<section class="workspace wrap" id="workspace" hidden aria-labelledby="workspace-title"><button id="back-tools" class="text-link">← Back to tools</button><div class="workspace-heading"><h2 id="workspace-title" tabindex="-1">Convert a file</h2><p id="workspace-description">Choose your file, pick a format, and make it yours.</p></div><div class="work-grid"><div class="upload-area"><button id="drop" class="drop" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 32V9m-9 9 9-9 9 9M9 32v9h30v-9"/></svg><strong>Choose files</strong><span>or drop them right here</span><small id="file-limit">Add one or several files</small></button><input type="file" id="file" multiple hidden><div id="file-list" class="file-list" hidden></div><p id="input-help" class="input-help">Your files upload only when you select Convert. Add as many as you like — they convert together.</p></div><div class="output-area"><label for="format">Convert to</label><select id="format" disabled><option value="">Choose a file first</option></select><fieldset id="image-options" hidden><legend>Image options</legend><div class="option-fields"><label>Width (px)<input id="width" type="number" min="1" max="20000" placeholder="Original"></label><label>Quality (1–100)<input id="quality" type="number" min="1" max="100" placeholder="Original"></label></div><label class="check"><input id="removebg" type="checkbox"> Remove background</label><label class="check"><input id="enhance" type="checkbox"> Restore & upscale faces</label></fieldset><label class="check" id="ml-option" hidden><input id="ml" type="checkbox"> Use AI layout recognition</label><div id="ai-notice" class="notice" hidden>AI options send your file to a third-party Hugging Face service.<label class="check"><input id="ai-consent" type="checkbox"> I agree to send this file for AI processing.</label></div><button id="convert" class="button primary" disabled>Convert <span aria-hidden="true">↗</span></button><div id="job-status" class="job-status" role="status" aria-live="polite" hidden></div><div id="results" class="results" hidden></div><a id="zip-all" class="button download" hidden>Download all (.zip) <span aria-hidden="true">↓</span></a><button id="start-over" class="text-link" hidden>Convert more files</button></div></div></section>
-<section class="web-section wrap" id="web-tool" hidden aria-labelledby="web-title"><button id="back-web" class="text-link">← Back to tools</button><h2 id="web-title" tabindex="-1">Save a web page.</h2><p>Turn a public web page into a PDF or an image.</p><form id="web-form"><label for="web-url">Page URL</label><div class="web-fields"><input id="web-url" type="url" placeholder="https://example.com" required><select id="web-format" aria-label="Web page output format"><option>pdf</option><option>png</option><option>jpg</option></select><button id="web-convert" class="button primary">Save page <span aria-hidden="true">↗</span></button></div></form><p id="web-help" class="input-help"></p><div id="web-status" class="job-status" role="status" hidden></div><a id="web-download" class="button download" hidden>Download file ↓</a></section>
-<section class="how wrap" id="how"><div><h2>Less figuring it out.<br>More getting it done.</h2><p>No installs. No sprawling menus.<br>Just the thing you came here to do.</p><a href="#catalog" class="text-link">Let's make it easy <span aria-hidden="true">↗</span></a></div><ol><li><span>01</span><div><h3>Pick your little helper.</h3><p>Find a tool or start with a file. We’ll show the formats your server supports.</p></div></li><li><span>02</span><div><h3>Make it work for you.</h3><p>Choose an output format. Resize an image, adjust quality, or try an AI option.</p></div></li><li><span>03</span><div><h3>Download. And carry on.</h3><p>Your new file is ready when the job completes. Grab it and get back to the good stuff.</p></div></li></ol></section>
-<section class="questions wrap" id="questions"><h2>A few good things to know.</h2><div><details><summary>What can Pocket Tools do?</summary><p>Convert images, PDFs, documents, audio, video, ebooks, fonts, 3D models and archives. Formats depend on the engines installed on your server. PDF editing, signing and merging are not currently included.</p></details><details><summary>Where do my files go?</summary><p>Standard conversions run on the server hosting Pocket Tools. Background removal, face enhancement and AI document recognition send files to configured Hugging Face services, with your agreement. Download files before the server’s retention window expires; the default is one hour.</p></details><details><summary>Do I need an account?</summary><p>No. Choose a tool and a file, then convert. Upload limits and supported formats are configured by the server operator.</p></details><details><summary>Can I convert files on my phone?</summary><p>Yes. Choose a file from your phone, select an output format, and download the result. The same tools work in your desktop browser.</p></details></div></section>
-<section class="closing wrap"><h2>Keep the possibilities.<br>Lose the busywork.</h2><a href="#catalog" class="button primary">Find your tool <span aria-hidden="true">↗</span></a><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M14 14h72v38c0 22-17 34-36 34S14 74 14 52Z"/><path d="m32 38 18 18 18-18"/></svg></section></main><footer class="footer wrap"><a class="brand" href="#">pocket tools<span class="brand-dot">.</span></a><p>A little help goes a long way.</p><a href="#catalog">Find your tool ↗</a></footer><script>const TOOLS = [
+<section class="catalog" id="catalog" aria-labelledby="catalog-title">
+ <div class="marker"><span class="section-title" id="catalog-title">Modules[<span class="count" id="tool-count">00</span>] <span class="px" data-px="4" data-w="14" data-h="5"></span></span><span class="boxnum">2</span></div>
+ <div class="filters" id="filters" role="group" aria-label="Filter tools by category"></div>
+ <label class="query"><span>&gt; Query:</span><input id="search" type="search" placeholder="pdf, heic, mp3..." aria-label="Search tools"><kbd>/</kbd></label>
+ <div class="modules" role="list">
+  <div class="mod-head" aria-hidden="true"><span>Module</span><span>In</span><span>Out</span><span>Status</span><span>Index</span></div>
+  <div id="catalogBody" class="tool-grid"></div>
+ </div>
+ <div class="empty" id="empty" hidden><h3>No modules matched.</h3><p>Try a format like "pdf" or another category.</p><button id="clear-search" class="btn">Clear query</button></div>
+ <p id="catalog-status" class="catalog-status" role="status">Checking available modules...</p>
+ <div class="catalog-foot"><span>System state: <span id="foot-state-inline">standby</span></span><button id="show-all" class="link">List all modules</button></div>
+</section>
+
+<section class="workspace" id="workspace" hidden aria-labelledby="workspace-title">
+ <div class="marker"><button id="back-tools" class="link">&lt; Back to modules</button><span class="boxnum cyan">3</span></div>
+ <hr class="rule">
+ <h2 class="ws-title" id="workspace-title" tabindex="-1">Convert a file</h2>
+ <p class="ws-desc" id="workspace-description">Choose your files, pick a format, run.</p>
+ <div class="work-grid">
+  <div class="upload-area">
+   <p class="pane-label">Input //</p>
+   <button id="drop" class="drop" type="button"><span class="plus" aria-hidden="true">+</span><strong>Drop files here</strong><span>or click to select</span><small id="file-limit">One file or several</small></button>
+   <input type="file" id="file" multiple hidden>
+   <div id="file-list" class="file-list" hidden></div>
+   <p id="input-help" class="input-help">Files upload only when you run Convert. Add several and they convert as one batch.</p>
+  </div>
+  <div class="output-area">
+   <p class="pane-label">Output //</p>
+   <label for="format">Convert to</label>
+   <select id="format" disabled><option value="">Choose a file first</option></select>
+   <fieldset id="image-options" hidden><legend>Image options</legend>
+    <div class="option-fields"><label>Width (px)<input id="width" type="number" min="1" max="20000" placeholder="Original"></label><label>Quality (1-100)<input id="quality" type="number" min="1" max="100" placeholder="Original"></label></div>
+    <label class="check"><input id="removebg" type="checkbox"> Remove background</label>
+    <label class="check"><input id="enhance" type="checkbox"> Restore &amp; upscale faces</label>
+   </fieldset>
+   <label class="check" id="ml-option" hidden><input id="ml" type="checkbox"> Use AI layout recognition</label>
+   <div id="ai-notice" class="notice" hidden>AI options send your file to a third-party Hugging Face service.<label class="check"><input id="ai-consent" type="checkbox"> I agree to send this file for AI processing</label></div>
+   <button id="convert" class="btn primary" disabled>&gt; Convert</button>
+   <div id="job-status" class="job-status" role="status" aria-live="polite" hidden></div>
+   <div id="results" class="results" hidden></div>
+   <a id="zip-all" class="btn download" hidden>[ Download all .zip ]</a>
+   <button id="start-over" class="link" hidden>Convert more files</button>
+  </div>
+ </div>
+</section>
+
+<section class="web-section" id="web-tool" hidden aria-labelledby="web-title">
+ <div class="marker"><button id="back-web" class="link">&lt; Back to modules</button><span class="boxnum cyan">3</span></div>
+ <hr class="rule">
+ <h2 class="ws-title" id="web-title" tabindex="-1">Save a web page</h2>
+ <p class="ws-desc">Turn a public web page into a PDF or an image.</p>
+ <form id="web-form" class="web-form"><label for="web-url">Page URL</label><div class="web-fields"><input id="web-url" type="url" placeholder="https://example.com" required><select id="web-format" aria-label="Web page output format"><option>pdf</option><option>png</option><option>jpg</option></select><button id="web-convert" class="btn primary">&gt; Save page</button></div></form>
+ <p id="web-help" class="input-help"></p>
+ <div id="web-status" class="job-status" role="status" hidden></div>
+ <a id="web-download" class="btn download" hidden>[ Download file ]</a>
+</section>
+
+<section id="how" aria-labelledby="how-title">
+ <div class="marker"><span class="section-title" id="how-title">[Procedure] <span class="px" data-px="5" data-w="12" data-h="5"></span></span><span class="boxnum">4</span></div>
+ <ol class="proc">
+  <li><span class="code">01</span><span class="fn">select_module()</span><p>Pick a tool, or just choose files. The page only offers formats your server can produce.</p></li>
+  <li><span class="code">02</span><span class="fn">configure()</span><p>Choose the output. Resize or compress images, or switch on an AI option.</p></li>
+  <li><span class="code">03</span><span class="fn">download()</span><p>Grab each file, or the whole batch as one ZIP. Then carry on.</p></li>
+ </ol>
+</section>
+
+<section class="faq" id="questions" aria-labelledby="faq-title">
+ <div class="marker"><span class="section-title" id="faq-title">[Query_log]</span><span class="boxnum cyan">5</span></div>
+ <hr class="rule cyan">
+ <details><summary>What can Pocket Tools do?</summary><p>Convert images, PDFs, documents, audio, video, ebooks, fonts, 3D models and archives. Formats depend on the engines installed on your server. PDF editing, signing and merging are not currently included.</p></details>
+ <details><summary>Where do my files go?</summary><p>Standard conversions run on the server hosting Pocket Tools. Background removal, face enhancement and AI document recognition send files to configured Hugging Face services, with your agreement. Download files before the server's retention window expires; the default is one hour.</p></details>
+ <details><summary>Do I need an account?</summary><p>No. Choose a tool and a file, then convert. Upload limits and supported formats are set by whoever runs the server.</p></details>
+ <details><summary>Can I run my own copy?</summary><p>Yes. It's MIT licensed. Clone the repo, run the Docker image, and you have the whole toolkit on your own machine.</p></details>
+</section>
+</main>
+
+<aside class="side" aria-label="Index">
+ <nav class="index" id="navigation" aria-label="Main navigation">
+  <a href="#home">Schema</a><a href="#catalog">Modules</a><a href="#how">Procedure</a><a href="#questions">Query_log</a><a href="https://github.com/KAZUyOTO/pocket-tools" target="_blank" rel="noopener">Source</a><span>?</span>
+ </nav>
+ <svg class="emblem" viewBox="0 0 120 150" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+  <circle cx="60" cy="8" r="4.5"/><path d="M60 13v26"/>
+  <ellipse cx="60" cy="72" rx="54" ry="15" transform="rotate(32 60 72)"/>
+  <ellipse cx="60" cy="72" rx="54" ry="15" transform="rotate(-32 60 72)"/>
+  <ellipse cx="60" cy="72" rx="36" ry="8" transform="rotate(32 60 72)" stroke-width="1.4"/>
+  <ellipse cx="60" cy="72" rx="36" ry="8" transform="rotate(-32 60 72)" stroke-width="1.4"/>
+  <circle cx="60" cy="72" r="19"/>
+  <path d="M60 58 C61.6 69 63 70.4 74 72 C63 73.6 61.6 75 60 86 C58.4 75 57 73.6 46 72 C57 70.4 58.4 69 60 58 Z" fill="currentColor" stroke="none"/>
+  <path d="M60 105v26"/><circle cx="60" cy="137" r="7"/>
+ </svg>
+ <span class="px" data-px="9" data-w="12" data-h="9"></span>
+</aside>
+</div>
+
+<footer class="foot">
+ <dl class="state"><dt>System state:</dt><dd id="system-state">Standby</dd><dt>Output:</dt><dd>?</dd></dl>
+ <a class="sig" href="https://github.com/KAZUyOTO/pocket-tools" target="_blank" rel="noopener"><span>pocket_tools / open source</span><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 4h28a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2H14L4 26V6a2 2 0 0 1 2-2Z" fill="#2338c8"/><path d="M21 10c.9 6.6 2.4 8.1 9 9-6.6.9-8.1 2.4-9 9-.9-6.6-2.4-8.1-9-9 6.6-.9 8.1-2.4 9-9Z" fill="#eceee8"/></svg></a>
+</footer>
+</div>
+<script>const TOOLS = [
   {
     "cat": "popular",
     "items": [
@@ -463,36 +576,38 @@ const API = (window.POCKET_API || '').replace(/\/$/, '');
 const $ = id => document.getElementById(id);
 const raster = new Set('png jpg jpeg webp gif bmp tiff tif avif heic heif ppm tga'.split(' '));
 const titles = {popular:'Popular',images:'Images',pdf:'PDF','audio & video':'Audio & video','documents & ebooks':'Documents & ebooks','web & more':'More tools'};
-const paths = {
- images:'<rect x="3" y="3" width="22" height="22" rx="2"/><circle cx="10" cy="10" r="2"/><path d="m4 22 7-7 4 4 4-6 6 9"/>',
- pdf:'<path d="M7 2h10l6 6v18H7Z M17 2v7h6 M11 14h8 M11 18h8 M11 22h5"/>',
- media:'<path d="M6 5h16v18H6Z M11 10l7 4-7 4Z"/>',
- docs:'<path d="M6 3h12l5 5v17H6Z M17 3v6h6 M10 13h9 M10 17h9 M10 21h6"/>',
- more:'<path d="m14 3 11 6-11 6L3 9Z M3 15l11 6 11-6 M3 21l11 6 11-6"/>',
- magic:'<path d="m5 24 14-14 4 4L9 28Z M18 2v4 M24 4l-3 3 M27 10h-4 M9 5v6 M6 8h6"/>'
-};
+
 let conversions={}, capabilities={}, connected=false, selected=null, queue=[], busy=false, active='popular', generation=0;
 const escapeHTML = value => String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const tools=TOOLS.flatMap(group=>group.items.map(tool=>({...tool,category:group.cat})));
+const tools=TOOLS.flatMap(group=>group.items.map(tool=>({...tool,name:tool.name.replace(/→/g,'->'),category:group.cat})));
 const uniqueTools=tools.filter((t,i,a)=>a.findIndex(x=>x.name===t.name&&x.op===t.op)===i);
 const size = n => n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(n/1024))} KB`;
 const extension=name=>name.includes('.')?name.split('.').pop().toLowerCase():'';
-function icon(t){const key=t.op==='removebg'||t.op==='enhance'?'magic':t.category==='images'?'images':t.category==='pdf'?'pdf':t.category==='audio & video'?'media':t.category==='documents & ebooks'?'docs':'more';return `<svg viewBox="0 0 30 30" aria-hidden="true">${paths[key]}</svg>`;}
+function moduleName(t){return t.name.toUpperCase().replace(/\s*->\s*/g,'_TO_').replace(/\s*\/\s*/g,'_').replace(/[^A-Z0-9_]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')+(t.op==='ml'?'.AI':'')+'()';}
+function moduleStatus(t){
+ if(!connected)return['STANDBY','idle'];
+ if(t.op==='removebg'||t.op==='enhance'||t.op==='ml')return['HYBRID','hybrid'];
+ if(t.url)return capabilities.urlEnabled===false?['IDLE','idle']:['ACTIVE',''];
+ if(t.to&&!Object.values(conversions).some(outs=>(outs||[]).includes(t.to)))return['IDLE','idle'];
+ if(t.from&&!(conversions[t.from]||[]).length)return['IDLE','idle'];
+ return['ACTIVE',''];
+}
 function render(){
- $('filters').innerHTML=['popular','all',...Object.keys(titles).filter(x=>x!=='popular')].map(cat=>`<button class="filter ${active===cat?'active':''}" aria-pressed="${active===cat}" data-category="${cat}">${cat==='all'?'All tools':titles[cat]}</button>`).join('');
+ $('filters').innerHTML=['popular','all',...Object.keys(titles).filter(x=>x!=='popular')].map(cat=>`<button class="filter ${active===cat?'active':''}" aria-pressed="${active===cat}" data-category="${cat}">${cat==='all'?'All':titles[cat]}</button>`).join('');
  const query=$('search').value.toLowerCase().trim();
  const list=(active==='popular'?tools.filter(t=>t.category==='popular'):active==='all'?uniqueTools:tools.filter(t=>t.category===active)).filter(t=>(t.name+' '+t.desc+' '+(t.to||'')+' '+(t.from||'')).toLowerCase().includes(query));
- $('catalogBody').innerHTML=list.map(t=>{const tone=t.op?'#b49aff':t.category==='pdf'?'#ffb2a5':t.category==='audio & video'?'#f2d593':t.category==='documents & ebooks'?'#a4c5ff':'#c2f4da';return `<button class="tool" data-tool="${tools.indexOf(t)}" style="--tone:${tone}"><span class="tool-icon">${icon(t)}</span><span class="tool-arrow" aria-hidden="true">↗</span><span class="tool-name">${escapeHTML(t.name.replace(/\bpdf\b/g,'PDF').replace(/\bjpg\b/g,'JPG').replace(/\bmp3\b/g,'MP3'))}</span><span class="tool-desc">${escapeHTML(t.desc)}</span></button>`;}).join('');
+ $('catalogBody').innerHTML=list.map((t,i)=>{const st=moduleStatus(t);return `<button class="tool" role="listitem" data-tool="${tools.indexOf(t)}"><span><span class="tool-name">${escapeHTML(moduleName(t))}</span><span class="tool-desc">${escapeHTML(t.desc)}</span></span><span class="c-in">${escapeHTML((t.url?'url':t.from||(t.op&&t.op!=='ml'?'image':'any')).toUpperCase())}</span><span class="c-out">${escapeHTML((t.to||(t.op==='compress'?'same':'any')).toUpperCase())}</span><span class="st ${st[1]}">${st[0]}</span><span class="c-idx">${String(i+1).padStart(3,'0')}</span></button>`;}).join('');
+ $('tool-count').textContent=String(list.length).padStart(2,'0');
  // uniqueTools contains objects from tools, retaining identity for tool selection.
  $('empty').hidden=!!list.length;
- if(connected)$('catalog-status').textContent=`${list.length} tools shown · Output formats checked against the conversion server`;
+ if(connected)$('catalog-status').textContent=`> ${list.length} modules listed. Status checked against the conversion server.`;
 }
 function status(id,text,type=''){const el=$(id);el.hidden=false;el.className='job-status '+type;el.textContent=text;}
 function clearResult(){['job-status','start-over','zip-all'].forEach(id=>$(id).hidden=true);$('results').hidden=true;$('results').innerHTML='';}
 function resetFile(){if(busy)return;generation++;queue=[];$('file').value='';renderQueue();$('format').innerHTML='<option value="">Choose a file first</option>';$('format').disabled=true;$('image-options').hidden=true;$('ml-option').hidden=true;['removebg','enhance','ml','ai-consent'].forEach(id=>$(id).checked=false);$('width').value='';$('quality').value='';$('ai-notice').hidden=true;$('convert').disabled=true;clearResult();}
 function openTool(tool){if(busy){$('workspace').scrollIntoView({behavior:'smooth'});return;}resetFile();selected=tool||null;$('catalog').hidden=true;$('workspace').hidden=!!tool?.url;$('web-tool').hidden=!tool?.url;
  if(tool?.url){$('web-status').hidden=true;$('web-download').hidden=true;$('web-url').value='';$('web-format').value=tool.to||'pdf';$('web-help').textContent=connected&&capabilities.urlEnabled===false?'Web page conversion is not enabled on this server.':'';$('web-title').focus();$('web-tool').scrollIntoView({behavior:'smooth'});return;}
- $('workspace-title').textContent=tool?tool.name.replace(/\bpdf\b/g,'PDF'):'Convert a file';$('workspace-description').textContent=tool?tool.desc+' Choose a file to get started.':'Choose your file, pick a format, and make it yours.';
+ $('workspace-title').textContent=tool?moduleName(tool):'CONVERT()';$('workspace-description').textContent=tool?tool.desc+' Choose files to get started.':'Choose your files, pick a format, run.';
  $('file').accept=tool?.from?'.'+tool.from:tool?.op?[...raster].map(x=>'.'+x).join(','):'';
  $('workspace-title').focus();$('workspace').scrollIntoView({behavior:'smooth'});
 }
@@ -518,7 +633,7 @@ function renderQueue(){
  const box=$('file-list');
  if(!queue.length){box.hidden=true;box.innerHTML='';$('drop').hidden=false;return;}
  box.hidden=false;$('drop').hidden=true;
- box.innerHTML=queue.map((it,i)=>`<div class="file-row"><span class="file-icon" aria-hidden="true">${escapeHTML(it.ext.toUpperCase())}</span><div class="file-meta"><strong>${escapeHTML(it.file.name)}</strong><span>${size(it.file.size)}</span></div><button class="file-remove" data-remove="${i}" aria-label="Remove ${escapeHTML(it.file.name)}">×</button></div>`).join('')+'<button type="button" class="text-link add-more" data-add="1">+ add more files</button>';
+ box.innerHTML=queue.map((it,i)=>`<div class="file-row"><span class="file-icon" aria-hidden="true">${escapeHTML(it.ext.toUpperCase())}</span><div class="file-meta"><strong>${escapeHTML(it.file.name)}</strong><span>${size(it.file.size)}</span></div><button class="file-remove" data-remove="${i}" aria-label="Remove ${escapeHTML(it.file.name)}">[x]</button></div>`).join('')+'<button type="button" class="text-link add-more" data-add="1">+ add more files</button>';
 }
 function populateFormats(){
  const first=queue[0];if(!first){$('format').innerHTML='<option value="">Choose a file first</option>';$('format').disabled=true;return;}
@@ -547,13 +662,21 @@ function updateOptions(){
  $('convert').disabled=busy||!connected||!queue.length||!$('format').value||(usesAI()&&!$('ai-consent').checked);
 }
 async function readJSON(url,options={}){const res=await fetch(url,{...options,signal:AbortSignal.timeout(30000)});let data;try{data=await res.json();}catch{throw new Error('The conversion server returned an unreadable response. Please try again.');}if(!res.ok)throw new Error(data.error||`Request failed (${res.status}).`);return data;}
+function systemState(on){
+ const pairs=Object.values(conversions).reduce((n,outs)=>n+(outs||[]).length,0);
+ const fmts=new Set(Object.keys(conversions));Object.values(conversions).forEach(o=>(o||[]).forEach(x=>fmts.add(x)));
+ $('capacity').textContent=on?`${pairs.toLocaleString('en-US')} conversions / ${fmts.size} formats`:'Server offline - browse only';
+ $('system-state').textContent=on?'Online':'Standby';$('system-state').classList.toggle('online',on);
+ $('foot-state-inline').textContent=on?'online':'standby';
+ $('signal').textContent=on?`[${fmts.size}_FORMATS.LIVE]`:'[NO_SIGNAL]';
+}
 async function connect(){
  // A standalone file opens without a server; do not make requests against file://.
- if(location.protocol==='file:'&&!API){$('catalog-status').textContent='Browse the complete collection. Conversion activates when this page is connected to your server.';return;}
- try{const data=await readJSON(`${API}/api/formats`);conversions=data.conversions||{};capabilities=data.capabilities||{};connected=true;$('catalog-status').classList.remove('error');if(capabilities.maxFileSize)$('file-limit').textContent=`Up to ${size(capabilities.maxFileSize)} each · add several`;render();if(queue.length)populateFormats();}
- catch{connected=false;$('catalog-status').classList.add('error');$('catalog-status').textContent='The conversion service is unavailable. You can still browse tools. ';const retry=document.createElement('button');retry.textContent='Try again';retry.onclick=connect;$('catalog-status').append(retry);}
+ if(location.protocol==='file:'&&!API){$('catalog-status').textContent='> Browse only. Conversion activates when this page is connected to a server.';$('capacity').textContent='No server connected';return;}
+ try{const data=await readJSON(`${API}/api/formats`);conversions=data.conversions||{};capabilities=data.capabilities||{};connected=true;$('catalog-status').classList.remove('error');systemState(true);if(capabilities.maxFileSize)$('file-limit').textContent=`Up to ${size(capabilities.maxFileSize)} each / add several`;render();if(queue.length)populateFormats();}
+ catch{connected=false;systemState(false);$('catalog-status').classList.add('error');$('catalog-status').textContent='> Conversion service unavailable. You can still browse modules. ';const retry=document.createElement('button');retry.textContent='Retry';retry.onclick=connect;$('catalog-status').append(retry);}
 }
-function setBusy(value){busy=value;['file','format','width','quality','removebg','enhance','ml','ai-consent','start-over','web-url','web-format','web-convert','back-tools','back-web'].forEach(id=>$(id).disabled=value);$('drop').disabled=value;$('convert').textContent=value?'Converting…':'Convert ↗';updateOptions();}
+function setBusy(value){busy=value;['file','format','width','quality','removebg','enhance','ml','ai-consent','start-over','web-url','web-format','web-convert','back-tools','back-web'].forEach(id=>$(id).disabled=value);$('drop').disabled=value;$('convert').textContent=value?'> Converting...':'> Convert';updateOptions();}
 function buildParams(to,item){
  const p=new URLSearchParams({to});
  if(raster.has(item.ext)&&raster.has(to)){if($('width').value)p.set('width',$('width').value);if($('quality').value)p.set('quality',$('quality').value);if($('removebg').checked)p.set('removebg','1');if($('enhance').checked)p.set('enhance','1');}
@@ -609,10 +732,10 @@ async function convert(){
    const finished=await pollJob(job.id,token,stateEl);
    if(token!==generation)return;
    row.classList.remove('busy');
-   if(finished){const name=finished.outputName||'converted-file';stateEl.className='result-state';stateEl.innerHTML=`<a class="result-dl" href="${API}/api/jobs/${encodeURIComponent(job.id)}/download" download="${escapeHTML(name)}">download ${escapeHTML(name)} ↓</a>`;done++;okIds.push(job.id);}
-  }catch(error){row.classList.remove('busy');stateEl.className='result-state error';stateEl.textContent='✕ '+error.message;failed++;}
+   if(finished){const name=finished.outputName||'converted-file';stateEl.className='result-state';stateEl.innerHTML=`<a class="result-dl" href="${API}/api/jobs/${encodeURIComponent(job.id)}/download" download="${escapeHTML(name)}">[download] ${escapeHTML(name)}</a>`;done++;okIds.push(job.id);}
+  }catch(error){row.classList.remove('busy');stateEl.className='result-state error';stateEl.textContent='ERR: '+error.message;failed++;}
  }
- if(token===generation){status('job-status',`Done — ${done} ready${failed?`, ${failed} failed`:''}.`,failed?'error':'success');if(okIds.length>1){$('zip-all').href=`${API}/api/batch-zip?ids=${okIds.join(',')}`;$('zip-all').hidden=false;}setBusy(false);$('start-over').hidden=false;}
+ if(token===generation){status('job-status',`Done. ${done} ready${failed?`, ${failed} failed`:''}.`,failed?'error':'success');if(okIds.length>1){$('zip-all').href=`${API}/api/batch-zip?ids=${okIds.join(',')}`;$('zip-all').hidden=false;}setBusy(false);$('start-over').hidden=false;}
 }
 async function convertWeb(event){event.preventDefault();if(busy)return;if(!connected)return status('web-status','Connect the conversion API to enable web page conversion.','error');if(capabilities.urlEnabled===false)return status('web-status','Web page conversion is not enabled on this server.','error');let url;try{url=new URL($('web-url').value);if(!['https:','http:'].includes(url.protocol))throw new Error();}catch{return status('web-status','Enter a valid http:// or https:// URL.','error');}
  const params=new URLSearchParams({url:url.href,to:$('web-format').value});$('web-download').hidden=true;setBusy(true);const token=++generation;try{status('web-status','Preparing the web page…','busy');const job=await readJSON(`${API}/api/convert?${params}`,{method:'POST'});await poll(job.id,'web-status','web-download',token);}catch(error){status('web-status',error.message,'error');}finally{setBusy(false);}
@@ -630,10 +753,10 @@ $('drop').addEventListener('drop',event=>{if(event.dataTransfer.files.length)add
 $('start-over').onclick=resetFile;$('convert').onclick=convert;$('web-form').onsubmit=convertWeb;
 $('file-list').addEventListener('click',event=>{const rm=event.target.closest('[data-remove]');if(rm){queue.splice(Number(rm.dataset.remove),1);generation++;renderQueue();populateFormats();updateOptions();clearResult();return;}if(event.target.closest('[data-add]'))$('file').click();});
 ['format','removebg','enhance','ml','ai-consent'].forEach(id=>$(id).addEventListener('change',updateOptions));
-$('menu').onclick=()=>{const open=$('navigation').classList.toggle('open');$('menu').setAttribute('aria-expanded',String(open));};
-$('navigation').addEventListener('click',()=>{$('navigation').classList.remove('open');$('menu').setAttribute('aria-expanded','false');});
 // Navigation always returns to the catalog rather than leaving its anchor hidden.
  document.querySelectorAll('a[href="#catalog"]').forEach(a=>a.addEventListener('click',event=>{event.preventDefault();catalog();}));
  document.addEventListener('keydown',event=>{if(event.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){event.preventDefault();catalog();$('search').focus();}});
-render();connect();
+// Decorative pixel glyphs, seeded so they look the same on every load.
+function pixelGlyphs(){document.querySelectorAll('[data-px]').forEach(el=>{let seed=Number(el.dataset.px)*9301+49297;const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;const w=Number(el.dataset.w||14),h=Number(el.dataset.h||5),c=4.4;let r='';for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=rnd();const band=Math.sin(x*.9+Number(el.dataset.px))*.5+.5;if(v<.34+band*.18){const dark=v<.07;r+=`<rect x="${x*c}" y="${y*c}" width="${c-1}" height="${c-1}" fill="${dark?'#4256d8':'#a8b5df'}"/>`;}}el.innerHTML=`<svg width="${w*c}" height="${h*c}" aria-hidden="true">${r}</svg>`;});}
+pixelGlyphs();render();connect();
 </script></body></html>
