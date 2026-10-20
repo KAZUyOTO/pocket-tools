@@ -3,64 +3,133 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pocket-Tools</title>
+    <title>pocket tools</title>
+    <meta name="description" content="Pocket Tools — self-hosted file conversion. Any file, any format. Nothing leaves your server." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/style.css" />
+    <script src="/config.js"></script>
   </head>
   <body>
-    <main class="shell">
-      <header>
-        <h1>Pocket-Tools</h1>
-        <p class="sub">Self-hosted file conversion. Nothing leaves your server.</p>
+    <div class="frame">
+      <!-- top bar -->
+      <header class="bar">
+        <button class="bar-cell icon-btn" id="menuBtn" aria-label="menu">
+          <span class="burger"></span>
+        </button>
+        <div class="bar-cell wordmark">pocket&nbsp;tools<span class="dot">.</span></div>
+        <div class="bar-cell grow nav-links">
+          <span class="nav-link" data-scroll="hero">convert</span>
+          <span class="nav-link" data-scroll="webcard">web&nbsp;page</span>
+        </div>
+        <a class="bar-cell action-cell" id="ghLink" href="https://github.com/KAZUyOTO/pocket-tools" target="_blank" rel="noopener">github</a>
       </header>
 
-      <section id="drop" class="drop" tabindex="0" aria-label="Drop a file or click to choose">
-        <input id="file" type="file" hidden />
-        <div class="drop-inner">
-          <div class="drop-icon">↑</div>
-          <p class="drop-main">Drop a file here or <span class="link">browse</span></p>
-          <p class="drop-hint">images · audio · video · documents</p>
+      <!-- main grid -->
+      <div class="stage">
+        <!-- left rail -->
+        <aside class="rail rail-left">
+          <span class="rail-text top">self-hosted</span>
+          <span class="rail-text bottom">open&nbsp;source</span>
+        </aside>
+
+        <!-- center: hero / dropzone -->
+        <main class="center">
+          <section class="card hero" id="hero">
+            <div class="hero-head">
+              <h1 class="display" id="heroTitle">convert<span class="accent">.</span></h1>
+              <span class="hero-kicker" id="heroKicker">any file</span>
+            </div>
+
+            <div class="sun" aria-hidden="true"></div>
+
+            <div class="hero-body">
+              <p class="lede" id="lede">
+                Drop a file and pick what to turn it into. Pocket Tools handles 200+ formats across
+                documents, images, audio, video, archives and more — straight from your browser.
+              </p>
+
+              <div id="drop" class="drop" tabindex="0" aria-label="Drop a file or click to choose">
+                <input id="file" type="file" hidden />
+                <span class="drop-plus">+</span>
+                <span class="drop-main">drop a file here <em>or browse</em></span>
+              </div>
+              <div class="filebar" id="filebar" hidden>
+                <span class="file-name" id="fileName"></span>
+                <button class="mini" id="reset" type="button">change</button>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <!-- right: controls panel (schedule-style) -->
+        <section class="panel" id="panel">
+          <div class="panel-head">
+            <span class="panel-title" id="panelTitle">output</span>
+            <span class="panel-note" id="panelNote">pick a file</span>
+          </div>
+
+          <div class="panel-scroll">
+            <ul class="fmt-list" id="fmtList" aria-label="target formats"></ul>
+          </div>
+
+          <div class="ops" id="ops" hidden>
+            <span class="ops-label">options</span>
+            <div class="ops-grid">
+              <input id="w" class="ops-in" type="number" min="1" placeholder="width px" />
+              <input id="q" class="ops-in" type="number" min="1" max="100" placeholder="quality" />
+            </div>
+            <label class="opt"><input id="rbg" type="checkbox" /><span>remove background</span></label>
+            <label class="opt"><input id="enh" type="checkbox" /><span>enhance faces (GFPGAN)</span></label>
+            <label class="opt" id="mlopt" hidden><input id="ml" type="checkbox" /><span>high-fidelity PDF (Docling)</span></label>
+          </div>
+
+          <div class="panel-foot">
+            <div class="status" id="status" hidden></div>
+            <button class="go" id="go" type="button" disabled>
+              <span id="goText">convert</span>
+              <span class="go-play" aria-hidden="true">▶</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- right rail -->
+        <aside class="rail rail-right">
+          <span class="rail-text top" id="railStat">any format</span>
+          <span class="rail-text bottom">nothing&nbsp;leaves&nbsp;your&nbsp;server</span>
+        </aside>
+      </div>
+
+      <!-- web page -> pdf card -->
+      <section class="card webcard" id="webcard">
+        <div class="webcard-left">
+          <h2 class="display sm">web&nbsp;page<span class="accent">.</span></h2>
+          <p class="lede">Turn any live URL into a PDF or image.</p>
         </div>
+        <div class="webrow">
+          <input id="url" class="url-in" type="url" inputmode="url" placeholder="https://example.com" />
+          <div class="url-fmt" id="urlFmt" role="radiogroup" aria-label="web output format">
+            <button class="chip on" data-v="pdf" type="button">pdf</button>
+            <button class="chip" data-v="png" type="button">png</button>
+            <button class="chip" data-v="jpg" type="button">jpg</button>
+          </div>
+          <button class="go urlgo" id="urlgo" type="button">render<span class="go-play">▶</span></button>
+        </div>
+        <div class="status" id="urlStatus" hidden></div>
       </section>
 
-      <section id="panel" class="panel" hidden>
-        <div class="file-row">
-          <span id="file-name" class="file-name"></span>
-          <button id="reset" class="ghost" type="button">change</button>
-        </div>
-        <div class="convert-row">
-          <label for="to">Convert to</label>
-          <select id="to" disabled></select>
-          <button id="go" class="primary" type="button" disabled>Convert</button>
-        </div>
-        <label class="chk hqwrap" id="hqwrap" hidden><input id="hq" type="checkbox" /> High-quality extraction (Docling · slower)</label>
-        <div class="imgops" id="imgops">
-          <span class="imgops-label">image options</span>
-          <input id="w" type="number" min="1" placeholder="width px" />
-          <input id="q" type="number" min="1" max="100" placeholder="quality" />
-          <label class="chk"><input id="enh" type="checkbox" /> Enhance faces (GFPGAN)</label>
-          <label class="chk"><input id="rbg" type="checkbox" /> Remove background</label>
-        </div>
-        <label class="chk pdfml" id="mlrow" hidden><input id="ml" type="checkbox" /> High-fidelity PDF (Docling ML — slower, uses a hosted Space)</label>
-        <div id="status" class="status" hidden></div>
-      </section>
-
-      <div class="divider"><span>or convert a web page</span></div>
-      <section class="urlbox">
-        <input id="url" type="url" inputmode="url" placeholder="https://example.com" />
-        <select id="urlto">
-          <option value="pdf">PDF</option>
-          <option value="png">PNG</option>
-          <option value="jpg">JPG</option>
-        </select>
-        <button id="urlgo" class="primary" type="button">Render</button>
-      </section>
-      <div id="urlstatus" class="status" hidden></div>
-
-      <footer>
-        <span id="engines" class="engines"></span>
-        <a href="https://github.com" class="src" id="srclink">source</a>
+      <!-- footer -->
+      <footer class="foot">
+        <button class="icon-btn round" id="footReset" aria-label="reset" title="reset">×</button>
+        <span class="engines" id="engines">loading engines…</span>
+        <span class="foot-dot" aria-hidden="true">○</span>
       </footer>
-    </main>
+    </div>
+
     <script src="/app.js"></script>
   </body>
 </html>

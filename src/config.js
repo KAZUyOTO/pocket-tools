@@ -30,4 +30,8 @@ export const config = {
   // worker(s) are separate processes and jobs survive a restart.
   redisUrl: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
   queueName: process.env.QUEUE_NAME || 'conversions',
+
+  // CORS: which origin(s) may call the API. "*" allows any (fine for a public,
+  // keyless tool); set to your Vercel URL to lock it down.
+  corsOrigin: process.env.CORS_ORIGIN || '*',
 };

@@ -14,6 +14,7 @@ import { pipeline } from 'node:stream/promises';
 import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
+import cors from '@fastify/cors';
 
 import { config } from './config.js';
 import { supportedConversions, engineStatus, resolveRoute } from './engines.js';
@@ -59,6 +60,12 @@ function parseOps(q) {
 }
 
 const app = Fastify({ logger: true, bodyLimit: config.maxFileSize });
+
+// CORS so a frontend hosted elsewhere (e.g. Vercel) can call this API.
+// CORS_ORIGIN can be "*", a single origin, or a comma-separated list.
+await app.register(cors, {
+  origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map((s) => s.trim()),
+});
 
 await app.register(multipart, { limits: { fileSize: config.maxFileSize, files: 1 } });
 await app.register(fastifyStatic, { root: config.publicDir, prefix: '/' });

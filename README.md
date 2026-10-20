@@ -27,6 +27,26 @@ npm start                 # the API
 
 Only the binaries present on your machine are enabled; the rest are greyed out in the UI. To cover everything, install: `ffmpeg imagemagick libreoffice pandoc calibre ghostscript poppler-utils inkscape assimp-utils fontforge tesseract-ocr wkhtmltopdf potrace p7zip-full libvips-tools python3 python3-pip`, then `pip3 install pdf2docx pdfplumber openpyxl` (and `cargo install vtracer` for colour raster→svg).
 
+## Deploying (frontend + backend split)
+
+The conversion engines (ffmpeg, LibreOffice, Ghostscript, …) are **system binaries with a Redis-backed queue**, so the backend needs a real container host — it can't run on serverless platforms like Vercel. The clean split:
+
+| Piece | Where | How |
+| --- | --- | --- |
+| **Frontend** (`public/`) | Vercel (or any static host) | `vercel.json` serves `public/` as static — no build |
+| **Backend** (API + worker + Redis) | Railway / Render / Fly.io / a VPS | the `Dockerfile` + `docker-compose.yml` |
+
+Wire them together one of two ways:
+
+1. **Set the API URL** — in `public/config.js`, set `window.POCKET_API = "https://your-backend-host"`. Enable CORS on the backend with `CORS_ORIGIN=https://your-site.vercel.app` (defaults to `*`).
+2. **Proxy via Vercel** — add a rewrite so the frontend calls same-origin `/api/*`:
+   ```json
+   { "rewrites": [{ "source": "/api/:path*", "destination": "https://your-backend-host/api/:path*" }] }
+   ```
+   Then leave `POCKET_API` empty.
+
+Serving the frontend and backend from the same origin (plain `docker compose up`) needs none of this — it just works.
+
 ## What it converts
 
 Eleven engines across every CloudConvert category. With one-hop **chaining** (below) that's ~2,000 reachable conversions.
