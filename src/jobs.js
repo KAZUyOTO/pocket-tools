@@ -71,9 +71,22 @@ function opsLabel(opts) {
   if (!opts) return 'copy';
   const parts = [];
   if (opts.enhance) parts.push('gfpgan');
+  if (opts.removebg) parts.push('removebg');
   if (opts.width || opts.height) parts.push('resize');
   if (opts.quality) parts.push('compress');
   return parts.join('+') || 'copy';
+}
+
+/** Full label: conversion route, plus any post-processing ops appended. */
+function engineLabel(d) {
+  if (d.from === d.to) return opsLabel(d.opts);
+  const route = routeLabel(d.from, d.to, d.opts || {});
+  const ops = [];
+  if (d.opts?.enhance) ops.push('gfpgan');
+  if (d.opts?.removebg) ops.push('removebg');
+  if (d.opts?.width || d.opts?.height) ops.push('resize');
+  if (d.opts?.quality) ops.push('compress');
+  return ops.length ? `${route} + ${ops.join('+')}` : route;
 }
 
 /** Map a BullMQ job to the public JSON shape the UI/API expose. */
@@ -85,7 +98,7 @@ export async function publicJob(job) {
     status: STATE[state] || 'queued',
     from: d.from,
     to: d.to,
-    engine: d.from === d.to ? opsLabel(d.opts) : routeLabel(d.from, d.to, d.opts || {}),
+    engine: engineLabel(d),
     originalName: d.originalName,
     outputName: d.outputName,
     error: job.failedReason || null,

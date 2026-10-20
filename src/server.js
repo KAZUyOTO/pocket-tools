@@ -17,7 +17,7 @@ import fastifyStatic from '@fastify/static';
 
 import { config } from './config.js';
 import { supportedConversions, engineStatus, resolveRoute } from './engines.js';
-import { isRaster, enhanceAvailable } from './postprocess.js';
+import { isRaster, enhanceAvailable, removebgAvailable } from './postprocess.js';
 import {
   createJob,
   enqueue,
@@ -53,6 +53,7 @@ function parseOps(q) {
     opts.scale = numIn(q.scale, 1, 4) || 2;
     opts.version = GFPGAN_VERSIONS.includes(q.version) ? q.version : 'v1.4';
   }
+  if (q.removebg === '1' || q.removebg === 'true') opts.removebg = true;
   if (q.ml === '1' || q.ml === 'true' || q.hq === '1' || q.hq === 'true') opts.ml = true;
   return Object.keys(opts).length ? opts : null;
 }
@@ -101,6 +102,14 @@ app.post('/api/convert', async (req, reply) => {
   if (ops?.enhance && !enhanceAvailable()) {
     data.file.resume();
     return reply.code(422).send({ error: 'Enhance (GFPGAN) is not available on this server' });
+  }
+  if (ops?.removebg && !removebgAvailable()) {
+    data.file.resume();
+    return reply.code(422).send({ error: 'Background removal is not available on this server' });
+  }
+  if (ops?.removebg && !isRaster(to)) {
+    data.file.resume();
+    return reply.code(422).send({ error: 'Background removal needs an image output (e.g. png)' });
   }
   if (ops?.ml && from !== 'pdf') delete ops.ml; // ML (Docling) path is PDF-only
   if (from === to) {

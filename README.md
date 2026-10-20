@@ -66,21 +66,30 @@ curl -s -F "file=@photo.jpg" "localhost:3000/api/convert?to=jpg&quality=60"
 
 # GFPGAN face restoration + 2x upscale
 curl -s -F "file=@portrait.png" "localhost:3000/api/convert?to=png&enhance=1&scale=2"
+
+# remove the background -> transparent PNG
+curl -s -F "file=@product.jpg" "localhost:3000/api/convert?to=png&removebg=1"
 ```
 
 | Param | Meaning |
 | --- | --- |
 | `width`, `height` | resize (give one to keep aspect ratio) |
 | `quality` | 1–100, JPEG/WebP compression; also strips metadata |
+| `removebg=1` | remove background → transparent cutout (use a `png`/`webp` output to keep alpha) |
 | `enhance=1` | GFPGAN face restoration + upscale |
 | `scale` | upscale factor for enhance (default 2) |
 | `version` | GFPGAN model: v1.2 / v1.3 / v1.4 / RestoreFormer / CodeFormer |
 
-> **How enhance works:** it calls a hosted GFPGAN **Hugging Face Space**
-> (`maxorange/GFPGAN-5`) over the network — so nothing heavy (torch, model
-> weights) is installed locally. Two consequences: the image is sent to that
-> third-party Space (don't use it for private/sensitive photos), and a call
-> takes ~1–2 minutes. Point `GFPGAN_SPACE` at your own Space to self-host.
+Operations compose — e.g. `?to=png&removebg=1&width=512` removes the background then resizes.
+
+> **How enhance / removebg work:** they call hosted **Hugging Face Spaces**
+> over the network — enhance uses `maxorange/GFPGAN-5`, background removal uses
+> `BrianCassidy/birefnet-background-removal` (BiRefNet/rembg, CPU, no GPU quota).
+> So nothing heavy (torch, model weights) is installed locally. Two consequences:
+> the image is sent to that third-party Space (don't use it for private/sensitive
+> photos), and a call takes seconds to a couple of minutes. Point `GFPGAN_SPACE`
+> or `BIREFNET_SPACE` at your own Space to self-host, and set `HF_TOKEN` to use a
+> ZeroGPU Space such as the official `ZhengPeng7/BiRefNet_demo`.
 
 ### Chaining
 
@@ -143,6 +152,8 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 | `QUEUE_NAME` | `conversions` | BullMQ queue name |
 | `GFPGAN_SPACE` | `maxorange/GFPGAN-5` | Hugging Face Space used for enhance |
 | `DOCLING_SPACE` | `yasserrmd/DoclingConverter` | Hugging Face Space used for ML PDF→md |
+| `BIREFNET_SPACE` | `BrianCassidy/birefnet-background-removal` | Space used for background removal |
+| `HF_TOKEN` | — | optional; raises quota on ZeroGPU Spaces |
 
 ## Roadmap
 
@@ -152,6 +163,7 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 - ~~**PDF → editable Office:** pdf → docx (pdf2docx) and pdf → xlsx (pdfplumber).~~ ✅ done (Phase 5)
 - ~~**Higher-fidelity PDF → Office:** Docling via a hosted HF Space (`pdf → md`, and `&ml=1` for `pdf → docx/html`).~~ ✅ done (Phase 7)
 - ~~**Image ops:** resize, compress, GFPGAN enhance (via a hosted Space).~~ ✅ done (Phase 6)
+- ~~**Background removal:** BiRefNet/rembg via a hosted Space (`removebg=1`).~~ ✅ done (Phase 8)
 - **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), subtitles, pdf → pptx.
 - **Operations, more:** OCR scanned pdf → searchable pdf, merge, video/pdf compress.
 

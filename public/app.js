@@ -154,6 +154,7 @@ async function convert() {
   if (w) params.set('width', w);
   if (q) params.set('quality', q);
   if ($('enh').checked) params.set('enhance', '1');
+  if ($('rbg').checked) params.set('removebg', '1');
   if ($('ml').checked && chosen.ext === 'pdf') params.set('ml', '1');
   if (chosen.ext === 'pdf' && $('hq').checked) params.set('hq', '1');
 
