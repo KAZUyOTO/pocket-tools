@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       p7zip-full \
       libvips-tools \
       python3 python3-pip \
+      redis-server \
       fonts-dejavu fonts-liberation fonts-noto-core fonts-noto-cjk \
       ca-certificates \
     && rm -rf /var/lib/apt/lists/*
