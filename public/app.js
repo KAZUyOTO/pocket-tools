@@ -70,9 +70,15 @@ function pick(file) {
   statusEl.className = 'status';
   statusEl.innerHTML = '';
 
+  // Show the high-fidelity Docling option only for PDF inputs.
+  $('mlrow').hidden = e !== 'pdf';
+
   const targets = (conversions[e] || []).slice();
   // For images, allow same-format output so you can resize/compress/enhance.
   if (RASTER.has(e) && !targets.includes(e)) targets.unshift(e);
+  // High-quality (Docling) option only makes sense for PDF input.
+  $('hqwrap').hidden = e !== 'pdf';
+  $('hq').checked = false;
   toSelect.innerHTML = '';
   if (!targets.length) {
     toSelect.disabled = true;
@@ -148,6 +154,8 @@ async function convert() {
   if (w) params.set('width', w);
   if (q) params.set('quality', q);
   if ($('enh').checked) params.set('enhance', '1');
+  if ($('ml').checked && chosen.ext === 'pdf') params.set('ml', '1');
+  if (chosen.ext === 'pdf' && $('hq').checked) params.set('hq', '1');
 
   let job;
   try {

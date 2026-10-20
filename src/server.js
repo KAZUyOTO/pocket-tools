@@ -53,6 +53,7 @@ function parseOps(q) {
     opts.scale = numIn(q.scale, 1, 4) || 2;
     opts.version = GFPGAN_VERSIONS.includes(q.version) ? q.version : 'v1.4';
   }
+  if (q.ml === '1' || q.ml === 'true' || q.hq === '1' || q.hq === 'true') opts.ml = true;
   return Object.keys(opts).length ? opts : null;
 }
 
@@ -101,12 +102,13 @@ app.post('/api/convert', async (req, reply) => {
     data.file.resume();
     return reply.code(422).send({ error: 'Enhance (GFPGAN) is not available on this server' });
   }
+  if (ops?.ml && from !== 'pdf') delete ops.ml; // ML (Docling) path is PDF-only
   if (from === to) {
     if (!ops || !isRaster(to)) {
       data.file.resume();
       return reply.code(422).send({ error: 'Same input and output format with no resize/compress/enhance' });
     }
-  } else if (!resolveRoute(from, to)) {
+  } else if (!resolveRoute(from, to, ops || {})) {
     data.file.resume(); // drain
     return reply.code(422).send({ error: `Cannot convert .${from} to .${to}` });
   }

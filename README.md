@@ -48,6 +48,7 @@ Eleven engines across every CloudConvert category. With one-hop **chaining** (be
 | Web pages | wkhtmltopdf | a live URL or local html → pdf, png, jpg |
 | Vectorize | vtracer / potrace | png, jpg, bmp, gif → svg (raster → vector) |
 | PDF → Office | pdf2docx / pdfplumber | pdf → docx (text, tables, images); pdf → xlsx (tables) |
+| PDF → Markdown (ML) | Docling (HF Space) | pdf → md with real layout/table understanding; `&ml=1` routes pdf → docx/html through it |
 
 The live list is always at `GET /api/formats` and drives the UI dropdown — only engines whose binary is installed appear.
 
@@ -141,6 +142,7 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 | `REDIS_URL` | `redis://127.0.0.1:6379` | queue backend |
 | `QUEUE_NAME` | `conversions` | BullMQ queue name |
 | `GFPGAN_SPACE` | `maxorange/GFPGAN-5` | Hugging Face Space used for enhance |
+| `DOCLING_SPACE` | `yasserrmd/DoclingConverter` | Hugging Face Space used for ML PDF→md |
 
 ## Roadmap
 
@@ -148,17 +150,30 @@ The API and the worker(s) are **separate processes** that share Redis and the `s
 - ~~**Engines:** Calibre, Inkscape, Ghostscript, Poppler, Assimp, 7-Zip, FontForge + one-hop chaining.~~ ✅ done (Phase 3)
 - ~~**OCR** (image → text), **URL/HTML → PDF/PNG** (wkhtmltopdf), **raster → SVG** (vtracer/potrace).~~ ✅ done (Phase 4)
 - ~~**PDF → editable Office:** pdf → docx (pdf2docx) and pdf → xlsx (pdfplumber).~~ ✅ done (Phase 5)
-- **Higher-fidelity PDF → Office:** optional ML engine (IBM Docling / Marker) — far better on complex layouts, but downloads models and wants more compute. See note below.
+- ~~**Higher-fidelity PDF → Office:** Docling via a hosted HF Space (`pdf → md`, and `&ml=1` for `pdf → docx/html`).~~ ✅ done (Phase 7)
 - ~~**Image ops:** resize, compress, GFPGAN enhance (via a hosted Space).~~ ✅ done (Phase 6)
 - **Engines, more:** CAD (dxf/dwg), RAW photo (LibRaw), subtitles, pdf → pptx.
 - **Operations, more:** OCR scanned pdf → searchable pdf, merge, video/pdf compress.
 
-### A note on PDF → Office quality
+### PDF → Office: two paths
 
-`pdf2docx` reconstructs text, tables and images from **digital** PDFs well. Two limits to know:
+| Path | How | When |
+| --- | --- | --- |
+| **Fast (default)** | `pdf2docx` / `pdfplumber`, local | Digital PDFs, offline, instant |
+| **High-fidelity** | Docling via a hosted HF Space, add `&ml=1` | Complex layouts, tables, multi-column |
 
-- **Scanned PDFs** have no text layer — run OCR first (the OCR engine, or `ocrmypdf`) or you'll get an empty document.
-- **Complex multi-column / heavy layouts** are where open-source tools trail the commercial engines CloudConvert licenses. For those, the best open-source path is an **ML extractor** — [Docling](https://github.com/docling-project/docling) or [Marker](https://github.com/datalab-to/marker) — which you can add as an engine that shells out to `docling input.pdf --to docx`. It's not bundled by default because it pulls multi-GB models and benefits from a GPU.
+The ML path calls a **Docling Hugging Face Space** (`yasserrmd/DoclingConverter` by default — override with `DOCLING_SPACE`). Docling does real layout analysis, so tables and reading order come out far cleaner. It runs `pdf → markdown` on the Space, then chains Markdown → your target (docx/html/…) through pandoc locally.
+
+```bash
+# fast local path
+curl -s -F "file=@report.pdf" "localhost:3000/api/convert?to=docx"
+# high-fidelity ML path (Docling)
+curl -s -F "file=@report.pdf" "localhost:3000/api/convert?to=docx&ml=1"
+# just the Markdown
+curl -s -F "file=@report.pdf" "localhost:3000/api/convert?to=md"
+```
+
+Two caveats, same as enhance: the PDF is sent to a third-party Space (don't use it for confidential docs — point `DOCLING_SPACE` at your own), and it's slower (network + model). **Scanned PDFs** still need OCR first on either path.
 - **Fidelity:** bundled fonts, LibreOffice tuning, GPU transcode for video.
 - **Batch jobs & webhooks**, matching the import → convert → export task-chain model.
 

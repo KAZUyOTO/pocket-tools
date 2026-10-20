@@ -28,7 +28,7 @@ async function runJob(job) {
     await fsp.copyFile(inputPath, produced);
     log(`job ${job.id}: ${from} (ops only)`);
   } else {
-    const route = resolveRoute(from, to);
+    const route = resolveRoute(from, to, opts || {});
     if (!route) throw new Error(`No route can convert .${from} to .${to}`);
     log(`job ${job.id}: ${from} -> ${to} via ${route.map((s) => s.engineId).join(' → ')}`);
     // Run each step, feeding one step's output into the next. The URL (if any)

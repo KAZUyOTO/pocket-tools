@@ -16,6 +16,7 @@ import { has, imageMagick } from './binaries.js';
 // Python helper scripts live at <project>/scripts.
 const SCRIPTS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts');
 const pdf2docxOk = () => !!has('python3') && fs.existsSync(path.join(SCRIPTS, 'pdf_to_docx.py'));
+const doclingOk = () => !!has('python3') && fs.existsSync(path.join(SCRIPTS, 'docling_convert.py'));
 
 const set = (...xs) => new Set(xs.map((x) => x.toLowerCase()));
 const inSet = (s, x) => s.has(String(x).toLowerCase());
@@ -130,6 +131,29 @@ const engines = [
       const produced = `${base}.${realExt}`;
       if (!fs.existsSync(produced)) throw new Error('Poppler produced no output');
       return produced;
+    },
+  },
+
+  {
+    id: 'docling',
+    label: 'Docling (HF Space)',
+    binary: has('python3') || null,
+    get available() {
+      return doclingOk();
+    },
+    canConvert(f, t) {
+      // Docling does ML layout analysis: pdf -> clean Markdown (+ json).
+      // Everything richer (docx/html/odt…) comes by chaining md -> X via pandoc.
+      return this.available && f === 'pdf' && (t === 'md' || t === 'markdown' || t === 'json');
+    },
+    async run({ inputPath, outExt, workdir, timeoutMs }) {
+      const out = path.join(workdir, `output.${outExt}`);
+      await run(has('python3'), [path.join(SCRIPTS, 'docling_convert.py'), inputPath, out, outExt], {
+        cwd: workdir,
+        timeoutMs,
+      });
+      if (!fs.existsSync(out)) throw new Error('Docling produced no output');
+      return out;
     },
   },
 
@@ -463,10 +487,23 @@ const HUBS = ['pdf', 'html', 'png', 'odt', 'svg', 'docx', 'ps'];
 /**
  * @returns {Array<{engineId:string, from:string, to:string}>|null}
  */
-export function resolveRoute(from, to) {
+export function resolveRoute(from, to, opts = {}) {
   from = String(from).toLowerCase();
   to = String(to).toLowerCase();
   if (from === to) return null;
+
+  // ML high-fidelity path: pdf -> (docx/html/odt/…) through Docling's Markdown.
+  // Opt-in via ?ml=1, since it needs the network and is slower than pdf2docx.
+  if (opts.ml && from === 'pdf' && to !== 'md' && doclingOk()) {
+    const second = resolveEngine('md', to);
+    if (second) {
+      return [
+        { engineId: 'docling', from: 'pdf', to: 'md' },
+        { engineId: second.id, from: 'md', to },
+      ];
+    }
+  }
+
   const direct = resolveEngine(from, to);
   if (direct) return [{ engineId: direct.id, from, to }];
   for (const hub of HUBS) {
@@ -487,8 +524,8 @@ export function resolveRoute(from, to) {
 }
 
 /** Human label for a route, e.g. "pandoc → libreoffice". */
-export function routeLabel(from, to) {
-  const r = resolveRoute(from, to);
+export function routeLabel(from, to, opts = {}) {
+  const r = resolveRoute(from, to, opts);
   if (!r) return 'none';
   return r.map((s) => s.engineId).join(' → ');
 }

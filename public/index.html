@@ -32,12 +32,14 @@
           <select id="to" disabled></select>
           <button id="go" class="primary" type="button" disabled>Convert</button>
         </div>
+        <label class="chk hqwrap" id="hqwrap" hidden><input id="hq" type="checkbox" /> High-quality extraction (Docling · slower)</label>
         <div class="imgops" id="imgops">
           <span class="imgops-label">image options</span>
           <input id="w" type="number" min="1" placeholder="width px" />
           <input id="q" type="number" min="1" max="100" placeholder="quality" />
           <label class="chk"><input id="enh" type="checkbox" /> Enhance faces (GFPGAN)</label>
         </div>
+        <label class="chk pdfml" id="mlrow" hidden><input id="ml" type="checkbox" /> High-fidelity PDF (Docling ML — slower, uses a hosted Space)</label>
         <div id="status" class="status" hidden></div>
       </section>
 

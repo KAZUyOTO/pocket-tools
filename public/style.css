@@ -83,6 +83,7 @@ button:disabled { opacity: 0.5; cursor: default; }
   border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font-size: 13px;
 }
 .chk { display: flex; align-items: center; gap: 6px; color: var(--dim); font-size: 13px; cursor: pointer; }
+.hqwrap { margin-top: 12px; }
 
 .status { margin-top: 16px; font-size: 14px; }
 .status .bar { height: 6px; border-radius: 6px; background: #11131a; overflow: hidden; margin-top: 8px; }

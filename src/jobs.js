@@ -85,7 +85,7 @@ export async function publicJob(job) {
     status: STATE[state] || 'queued',
     from: d.from,
     to: d.to,
-    engine: d.from === d.to ? opsLabel(d.opts) : routeLabel(d.from, d.to),
+    engine: d.from === d.to ? opsLabel(d.opts) : routeLabel(d.from, d.to, d.opts || {}),
     originalName: d.originalName,
     outputName: d.outputName,
     error: job.failedReason || null,
