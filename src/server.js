@@ -15,6 +15,7 @@ import Fastify from 'fastify';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import cors from '@fastify/cors';
+import archiver from 'archiver';
 
 import { config } from './config.js';
 import { supportedConversions, engineStatus, resolveRoute } from './engines.js';
@@ -177,6 +178,48 @@ app.get('/api/jobs/:id/download', async (req, reply) => {
     .header('Content-Type', 'application/octet-stream')
     .header('Content-Disposition', `attachment; filename="${outputName}"`);
   return reply.send(fs.createReadStream(out));
+});
+
+// Download several finished jobs as one zip: GET /api/batch-zip?ids=a,b,c
+app.get('/api/batch-zip', async (req, reply) => {
+  const ids = String(req.query.ids || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => /^[\w-]+$/.test(s))
+    .slice(0, 200);
+  if (!ids.length) return reply.code(400).send({ error: 'No job ids given' });
+
+  const entries = [];
+  for (const id of ids) {
+    const job = await getJob(id);
+    if (!job) continue;
+    const out = await outputPathOf(job);
+    if (out && fs.existsSync(out)) entries.push({ path: out, name: job.data?.outputName || `${id}.bin` });
+  }
+  if (!entries.length) return reply.code(404).send({ error: 'No ready files to zip (they may have expired)' });
+
+  reply
+    .header('Content-Type', 'application/zip')
+    .header('Content-Disposition', 'attachment; filename="pocket-tools.zip"');
+
+  const archive = archiver('zip', { zlib: { level: 6 } });
+  archive.on('error', (err) => reply.raw.destroy(err));
+  // de-duplicate identical output names (file.jpg, file-2.jpg, …)
+  const seen = new Map();
+  for (const e of entries) {
+    let name = e.name;
+    if (seen.has(name)) {
+      const n = seen.get(name) + 1;
+      seen.set(name, n);
+      const dot = name.lastIndexOf('.');
+      name = dot > 0 ? `${name.slice(0, dot)}-${n}${name.slice(dot)}` : `${name}-${n}`;
+    } else {
+      seen.set(name, 1);
+    }
+    archive.file(e.path, { name });
+  }
+  archive.finalize();
+  return reply.send(archive);
 });
 
 async function shutdown() {
