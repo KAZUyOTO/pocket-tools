@@ -1,4 +1,4 @@
-// OpenConvert front-end. Vanilla, no build step.
+// Pocket-Tools front-end. Vanilla, no build step.
 const $ = (id) => document.getElementById(id);
 const drop = $('drop');
 const fileInput = $('file');

@@ -2,7 +2,7 @@
 """PDF -> editable DOCX with layout reconstruction (text, tables, images).
 
 Uses pdf2docx (built on PyMuPDF). Works on digital/text PDFs; a scanned PDF
-has no text layer, so OCR it first (OpenConvert's OCR engine, or ocrmypdf).
+has no text layer, so OCR it first (Pocket-Tools's OCR engine, or ocrmypdf).
 
     python3 pdf_to_docx.py input.pdf output.docx
 """

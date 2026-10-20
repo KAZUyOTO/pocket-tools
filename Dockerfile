@@ -1,4 +1,4 @@
-# OpenConvert — one image with Node + every conversion binary.
+# Pocket-Tools — one image with Node + every conversion binary.
 # Big on purpose: LibreOffice + fonts dominate the size (~1.5 GB). That is the
 # cost of covering office formats well. Trim the apt list to shrink it.
 
@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # a hosted Space over the network, so NO local torch/model is bundled).
 RUN pip3 install --break-system-packages --no-cache-dir pdf2docx pdfplumber openpyxl gradio_client pillow
 
-# Debian's ImageMagick blocks PDF/PS by default; OpenConvert's whole job is
+# Debian's ImageMagick blocks PDF/PS by default; Pocket-Tools's whole job is
 # converting these, so allow them. (Inputs run sandboxed per job with a timeout.)
 RUN for p in /etc/ImageMagick-6/policy.xml /etc/ImageMagick-7/policy.xml; do \
       [ -f "$p" ] && sed -i -E 's/rights="none" pattern="(PDF|PS|EPS|XPS)"/rights="read|write" pattern="\1"/' "$p" || true; \

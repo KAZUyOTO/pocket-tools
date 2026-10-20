@@ -176,4 +176,4 @@ process.on('SIGTERM', shutdown);
 await ensureStorage();
 await app.listen({ port: config.port, host: config.host });
 const avail = engineStatus().filter((e) => e.available).map((e) => e.label).join(', ') || 'none';
-app.log.info(`OpenConvert API ready. Engines: ${avail}. Queue on ${config.redisUrl}`);
+app.log.info(`Pocket-Tools API ready. Engines: ${avail}. Queue on ${config.redisUrl}`);

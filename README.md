@@ -2,7 +2,7 @@
 
 Self-hosted, fully open-source file conversion. Upload a file, pick a format, get it back. Everything runs on your own server — no accounts, no limits, no file leaves the box.
 
-The actual conversions are done by battle-tested open-source binaries (FFmpeg, LibreOffice, ImageMagick, Pandoc). OpenConvert is the thin, hackable layer around them: an API, a job queue, and a drag-and-drop UI.
+The actual conversions are done by battle-tested open-source binaries (FFmpeg, LibreOffice, ImageMagick, Pandoc). Pocket-Tools is the thin, hackable layer around them: an API, a job queue, and a drag-and-drop UI.
 
 ## Quick start
 
@@ -93,7 +93,7 @@ Operations compose — e.g. `?to=png&removebg=1&width=512` removes the backgroun
 
 ### Chaining
 
-When no single engine does `from → to` directly, OpenConvert routes through an intermediate (pdf, html, png, …). So `md → pdf` runs `pandoc → libreoffice`, and `svg → jpg` runs `inkscape → poppler`, automatically. The route is shown in each job's `engine` field.
+When no single engine does `from → to` directly, Pocket-Tools routes through an intermediate (pdf, html, png, …). So `md → pdf` runs `pandoc → libreoffice`, and `svg → jpg` runs `inkscape → poppler`, automatically. The route is shown in each job's `engine` field.
 
 ## API
 
