@@ -1,6 +1,6 @@
 # Pocket-Tools
 
-Self-hosted, fully open-source file conversion. Upload a file, pick a format, get it back. Everything runs on your own server — no accounts, no limits, no file leaves the box.
+All your conversion needs — not just PDF. Self-hosted, fully open-source. Drop a file to convert anything, or browse the tool catalog grouped by need (images, PDF, audio & video, documents & ebooks, web, and more). Everything runs on your own server — no accounts, no limits, no file leaves the box.
 
 The actual conversions are done by battle-tested open-source binaries (FFmpeg, LibreOffice, ImageMagick, Pandoc). Pocket-Tools is the thin, hackable layer around them: an API, a job queue, and a drag-and-drop UI.
 

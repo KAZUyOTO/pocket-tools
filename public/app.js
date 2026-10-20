@@ -16,6 +16,7 @@ const statusEl = $('status');
 let conversions = {};
 let chosen = null; // { file, ext }
 let target = null; // selected output ext
+let pending = null; // a tool picked from the catalog, pre-configuring the convert
 
 const ext = (name) => (name.split('.').pop() || '').toLowerCase();
 
@@ -40,6 +41,8 @@ async function init() {
   } catch {
     $('engines').textContent = 'could not reach the server';
   }
+
+  renderCatalog();
 
   drop.addEventListener('click', () => fileInput.click());
   drop.addEventListener('keydown', (e) => {
@@ -102,6 +105,18 @@ function pick(file) {
   $('ops').hidden = false;
   $('mlopt').hidden = e !== 'pdf';
   goBtn.disabled = true;
+
+  // apply a catalog tool's pre-configuration, if one is active
+  if (pending) {
+    if (pending.op === 'removebg') $('rbg').checked = true;
+    if (pending.op === 'enhance') $('enh').checked = true;
+    if (pending.op === 'ml' && e === 'pdf') $('ml').checked = true;
+    if (pending.op === 'compress') $('q').focus();
+    if (pending.to) {
+      const row = [...fmtList.children].find((r) => r.querySelector('.fmt-ext')?.textContent === pending.to);
+      if (row) row.click();
+    }
+  }
 }
 
 function renderFormats(targets, fromExt) {
@@ -134,6 +149,10 @@ function renderFormats(targets, fromExt) {
 function resetFile() {
   chosen = null;
   target = null;
+  pending = null;
+  $('rbg').checked = $('enh').checked = false;
+  if ($('ml')) $('ml').checked = false;
+  $('w').value = $('q').value = '';
   fileInput.value = '';
   $('filebar').hidden = true;
   drop.hidden = false;
@@ -230,4 +249,124 @@ async function poll(id, el, done) {
     setStatus(el, 'err', '✕ lost connection to the server');
     done && done();
   }
+}
+
+/* ---------- tool catalog (browse by need) ---------- */
+// Each tool pre-configures the converter: `to` fixes the output, `op` sets an
+// image operation, `url` routes to the web-page card. `tag` shows a badge.
+const TOOLS = [
+  {
+    cat: 'popular',
+    items: [
+      { name: 'remove background', op: 'removebg', to: 'png', tag: 'ai', desc: '→ transparent png' },
+      { name: 'pdf → word', from: 'pdf', to: 'docx', desc: 'editable document' },
+      { name: 'image → jpg', to: 'jpg', desc: 'png · heic · webp · …' },
+      { name: 'video → mp3', to: 'mp3', desc: 'pull the audio' },
+      { name: 'web page → pdf', url: true, to: 'pdf', desc: 'any live url' },
+      { name: 'compress image', op: 'compress', desc: 'smaller files' },
+    ],
+  },
+  {
+    cat: 'images',
+    items: [
+      { name: 'convert image', desc: 'png · jpg · webp · avif · heic · tiff …' },
+      { name: 'remove background', op: 'removebg', to: 'png', tag: 'ai', desc: '→ transparent png' },
+      { name: 'upscale / enhance', op: 'enhance', to: 'png', tag: 'ai', desc: 'GFPGAN faces + 2×' },
+      { name: 'compress image', op: 'compress', desc: 'set quality' },
+      { name: 'image → pdf', to: 'pdf', desc: 'one-page pdf' },
+      { name: 'image → svg', to: 'svg', desc: 'vector trace' },
+      { name: 'heic → jpg', to: 'jpg', desc: 'iphone photos' },
+      { name: 'image → text', to: 'txt', tag: 'ocr', desc: 'read text from an image' },
+    ],
+  },
+  {
+    cat: 'pdf',
+    items: [
+      { name: 'pdf → word', from: 'pdf', to: 'docx', desc: 'editable document' },
+      { name: 'pdf → word', from: 'pdf', to: 'docx', op: 'ml', tag: 'ai', desc: 'Docling high-fidelity' },
+      { name: 'pdf → excel', from: 'pdf', to: 'xlsx', desc: 'extract tables' },
+      { name: 'pdf → image', from: 'pdf', to: 'png', desc: 'render pages' },
+      { name: 'pdf → text', from: 'pdf', to: 'txt', desc: 'plain text' },
+      { name: 'word → pdf', from: 'docx', to: 'pdf', desc: 'from office' },
+      { name: 'markdown → pdf', from: 'md', to: 'pdf', desc: 'from .md' },
+    ],
+  },
+  {
+    cat: 'audio & video',
+    items: [
+      { name: 'convert video', desc: 'mp4 · mov · webm · mkv · avi …' },
+      { name: 'convert audio', desc: 'mp3 · wav · flac · ogg · m4a …' },
+      { name: 'video → mp3', to: 'mp3', desc: 'extract audio' },
+      { name: 'video → gif', to: 'gif', desc: 'short clips' },
+      { name: 'audio → wav', to: 'wav', desc: 'uncompressed' },
+    ],
+  },
+  {
+    cat: 'documents & ebooks',
+    items: [
+      { name: 'convert document', desc: 'docx · odt · rtf · html · txt …' },
+      { name: 'epub → mobi', from: 'epub', to: 'mobi', desc: 'kindle' },
+      { name: 'pdf → epub', from: 'pdf', to: 'epub', desc: 'reflowable ebook' },
+      { name: 'convert ebook', desc: 'epub · mobi · azw3 · fb2 …' },
+      { name: 'markdown → docx', from: 'md', to: 'docx', desc: 'from .md' },
+    ],
+  },
+  {
+    cat: 'web & more',
+    items: [
+      { name: 'web page → pdf', url: true, to: 'pdf', desc: 'any live url' },
+      { name: 'web page → image', url: true, to: 'png', desc: 'screenshot' },
+      { name: 'convert font', desc: 'ttf · otf · woff · woff2' },
+      { name: '3d model convert', desc: 'obj · stl · ply · gltf · fbx …' },
+      { name: 'repack archive', desc: 'zip · 7z · tar · gz' },
+    ],
+  },
+];
+
+function renderCatalog() {
+  const body = document.getElementById('catalogBody');
+  if (!body) return;
+  body.innerHTML = '';
+  TOOLS.forEach((group, gi) => {
+    const sec = document.createElement('div');
+    sec.className = 'cat-group';
+    const label = document.createElement('div');
+    label.className = 'cat-label';
+    label.innerHTML = `<span class="idx">${String(gi + 1).padStart(2, '0')}</span>${group.cat}`;
+    sec.appendChild(label);
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+    group.items.forEach((t) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tool';
+      const name = t.name.replace('→', '<span class="arrow">→</span>');
+      btn.innerHTML =
+        `<span class="tool-name">${name}${t.tag ? `<span class="tag">${t.tag}</span>` : ''}</span>` +
+        (t.desc ? `<span class="tool-desc">${t.desc}</span>` : '');
+      btn.addEventListener('click', () => selectTool(t));
+      grid.appendChild(btn);
+    });
+    sec.appendChild(grid);
+    body.appendChild(sec);
+  });
+}
+
+function selectTool(t) {
+  // web-page tools route to the URL card
+  if (t.url) {
+    const chips = $('urlFmt').querySelectorAll('.chip');
+    chips.forEach((c) => c.classList.toggle('on', c.dataset.v === t.to));
+    $('webcard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('url').focus();
+    return;
+  }
+  // file tools: configure the converter, then open the file picker
+  resetFile();
+  pending = t;
+  $('heroKicker').textContent = t.name;
+  $('panelTitle').textContent = 'output';
+  $('panelNote').textContent = t.to ? `→ ${t.to}` : 'drop a file';
+  document.getElementById('hero').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  fileInput.click(); // the tool click is a user gesture, so this is allowed
 }
