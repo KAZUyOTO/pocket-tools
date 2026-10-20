@@ -75,6 +75,13 @@ app.get('/api/health', async () => ({ ok: true, ...(await stats()) }));
 app.get('/api/formats', async () => ({
   conversions: supportedConversions(),
   engines: engineStatus(),
+  capabilities: {
+    imageOps: true,
+    urlEnabled: true,
+    maxFileSize: config.maxFileSize,
+    enhance: enhanceAvailable(),
+    removebg: removebgAvailable(),
+  },
 }));
 
 app.post('/api/convert', async (req, reply) => {
