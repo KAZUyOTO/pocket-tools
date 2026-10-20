@@ -1,4 +1,4 @@
-# OpenConvert
+# Pocket-Tools
 
 Self-hosted, fully open-source file conversion. Upload a file, pick a format, get it back. Everything runs on your own server — no accounts, no limits, no file leaves the box.
 
