@@ -1,0 +1,26 @@
+# Render's free tier sleeps a web service after 15 minutes without traffic.
+# This pings the health endpoint every 10 minutes so the site stays awake.
+name: Keep Render awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      URL: ${{ vars.KEEPALIVE_URL || 'https://pocket-tools-re5n.onrender.com/api/health' }}
+    steps:
+      - name: Ping health endpoint
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$URL" || true)
+            if [ "$code" = "200" ]; then echo "Awake (HTTP $code) on attempt $attempt"; exit 0; fi
+            echo "Attempt $attempt got HTTP ${code:-none}, retrying in 20s"
+            sleep 20
+          done
+          echo "Site did not answer after 3 attempts"
+          exit 1
